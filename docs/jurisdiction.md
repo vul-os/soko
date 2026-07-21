@@ -4,6 +4,33 @@ TRACT is designed to be used worldwide — South Africa, the EU, other African m
 the Americas — which means jurisdiction cannot be an afterthought bolted onto a platform's terms of
 service. It is a machine-readable field on every offer and order.
 
+## What has actually been checked
+
+A narrow legal pass checked one of the five questions this page rests on. The answer is favourable,
+narrower than assumed, and **untested — no court anywhere has applied any of it to a no-operator
+protocol**. Four questions returned nothing across three passes and are unresearched, not resolved.
+
+Three things worth knowing before reading the rest as settled:
+
+- **There is a marketplace.** US state definitions are medium-agnostic and expressly name *a
+  catalog* and *a dedicated sales software application*, so a signed catalogue feed and a
+  buyer-side cart client fall inside the term. The argument available is that there is no
+  *facilitator* — not that there is no marketplace.
+- **Escrow is the trigger.** In Texas and New York it is enough on its own to make a gateway a tax
+  facilitator, even where its balance sheet never holds the money. Running escrow is a bigger
+  decision than "an operator class".
+- **"Render-only, never touches funds" is a two-state position**, safe in New York and Texas and
+  likely caught in Washington and California. It is not a US answer.
+
+**And EU VAT anticipates this design's central claim.** Art 5b of Implementing Regulation
+282/2011, per the Commission's own notes, holds that asserting "the contract is concluded between
+the underlying supplier and the customer **is not sufficient**" to escape deemed-supplier status,
+because the test looks at economic reality and influence rather than at what the parties declare.
+The words "indirectly" and "any" exist specifically to prevent "artificial splitting of rights and
+obligations between the electronic interface and the underlying suppliers". That is the argument
+"the contract is between two keypairs" makes, named and rejected in advance. It bites on imports
+under €150 and intra-EU supplies by non-EU sellers — a real scope limit, not an escape.
+
 ## The rule: responsibility follows the money
 
 Every regime asks the same question — *who is responsible?* — and a protocol with no operator has
