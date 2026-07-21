@@ -36,17 +36,9 @@ Soko separates them. Your catalogue is a signed feed you publish. Your cart is C
 own devices. Delivery is computed locally from published rate cards rather than brokered. Nobody
 can delist you, and leaving costs a DNS change.
 
-```mermaid
-flowchart LR
-  SA["Seller A<br/><i>signed feed</i>"] --> IDX
-  SB["Seller B<br/><i>signed feed</i>"] --> IDX
-  SC["Seller C<br/><i>signed feed</i>"] --> IDX
-  IDX["Any index<br/><i>derived · rebuildable<br/>authoritative for nothing</i>"] --> B
-  B["<b>Buyer node</b><br/>one cart across all three<br/>routing computed here"]
-  B -. "sealed order" .-> SA
-  B -. "sealed order" .-> SB
-  B -. "sealed order" .-> SC
-```
+<p align="center">
+  <img src="docs/diagrams/cart-flow.png" width="760" alt="One cart across independent sellers" />
+</p>
 
 No party sees the whole cart. The index holds no authority — a disagreement between an index and a
 seller's feed always resolves in favour of the feed.
@@ -94,6 +86,25 @@ A decentralized design that hides its operator classes is lying about them.
   it is actually licensed for, and never in possession of identity keys.
 - **Nobody agrees on a star rating.** Ranking is derived, so indexes will disagree. There is no
   canonical 4.7 stars, because computing one requires the authority being removed.
+
+## Diagrams
+
+<p align="center">
+  <img src="docs/diagrams/axes.png" width="800" alt="The four axes of an offer" />
+</p>
+<p align="center"><em>Every trade is one object with four axes. The dotted edge is the one that catches people out: <strong>fulfilment also derives place of supply</strong>, which is the tax anchor.</em></p>
+
+<p align="center">
+  <img src="docs/diagrams/checkout.png" width="800" alt="Checkout across independent sellers" />
+</p>
+<p align="center"><em>The buyer's node orchestrates. The gateway appears <strong>only</strong> if both parties chose escrow — two native parties never need one.</em></p>
+
+<p align="center">
+  <img src="docs/diagrams/routing.png" width="560" alt="Direct versus hub consolidation" />
+</p>
+<p align="center"><em>Rate cards are published, so consolidation is compared locally. No quote API, and nobody learns the cart.</em></p>
+
+<sub>No product screenshots yet — Soko is pre-alpha and there is no UI to photograph. These are regenerated from one source with <code>node tools/diagrams.mjs</code>. See <a href="docs/diagrams.md">Diagrams</a>.</sub>
 
 ## Read the evidence before believing any of it
 
@@ -143,13 +154,9 @@ cargo tree -p soko-seam    # must stay one line — a dep here is inherited by e
 
 ## Architecture
 
-```mermaid
-flowchart TD
-  SUB["<b>DMTAP substrate</b><br/>Identity · Feeds &amp; Blobs · Sync · Infra Roles · Wake"]
-  TR["<b>TRACT</b><br/>catalogue · offer · cart · order · delivery · settlement · trust"]
-  SK["<b>Soko</b><br/>this repository"]
-  SUB --> TR --> SK
-```
+<p align="center">
+  <img src="docs/diagrams/substrate.png" width="620" alt="Soko sits on TRACT, which sits on the DMTAP substrate" />
+</p>
 
 Soko implements no cryptography. Identity, signing, content addressing, feeds and sync come from the
 [DMTAP substrate](https://github.com/vul-os/dmtap); a hash construction invented in `soko-core`
