@@ -19,3 +19,8 @@ soko-trust = { path = "../soko-trust" }
 soko-jurisdiction = { path = "../soko-jurisdiction" }
 soko-gateway = { path = "../soko-gateway" }
 soko-seam = { path = "../soko-seam" }
+
+[dev-dependencies]
+# Parses the TRACT conformance vector JSON in `tests/conformance.rs`. Never a normal dependency —
+# see the note beside `serde_json` in the workspace `Cargo.toml`.
+serde_json.workspace = true

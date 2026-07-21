@@ -17,6 +17,31 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
 
+  coverage:
+    # Reports workspace coverage; does not gate the build on a percentage. An arbitrary threshold
+    # rewards tests written to move the number rather than tests written to catch a bug — and the
+    # gap this task exists to close (a 400-line renderer with zero tests) was invisible precisely
+    # because nothing measured it, not because a threshold was set too low. So this job prints the
+    # number, in the job summary where a human reads it on every PR, and stops there. If a future
+    # contributor is tempted to "fix" the missing `fail-under`, this comment is the answer: don't.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo llvm-cov --workspace | tee /tmp/coverage.txt
+      - name: Publish to job summary
+        run: |
+          {
+            echo "### Coverage (informational — no threshold, see workflow comment)"
+            echo '```'
+            cat /tmp/coverage.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
   seam-has-no-dependencies:
     # The seam's whole purpose is that implementing it costs nothing. A dependency added here is
     # inherited by everyone who wires their own payment provider, so this is a CI gate rather than

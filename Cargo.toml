@@ -47,6 +47,12 @@ unicode-normalization = "0.1"
 # the normal dependency tree of every downstream consumer for no runtime benefit.
 proptest = "1"
 
+# Dev-only. Parses the TRACT conformance vectors' JSON for `soko-node`'s conformance test — the
+# vectors are read as data, never linked as code (see `conformance/README.md`'s "implementation
+# neutrality" rule), so a JSON parser is the only thing this pulls in. Same rule as `proptest`
+# above: [dev-dependencies] only.
+serde_json = "1"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

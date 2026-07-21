@@ -132,6 +132,138 @@ pub mod sealed {
     pub trait Sealed {}
 }
 
+/// Round-trip helpers for checking that Soko's CBOR encoding is **stable**, not merely correct.
+///
+/// Every type in this workspace that derives `Serialize`/`Deserialize` is meant to become part of
+/// a content-addressed object once §16 is normative (§16.2, §16.3). Nothing in the workspace
+/// called `ciborium::into_writer` on one of them before this module existed — there was no
+/// round-trip test at all, so nothing had established that encoding a value twice produces the
+/// same bytes twice, let alone that the shape matches §16's CDDL (matching the CDDL is future
+/// work, once §16 stops being a draft; this module does not attempt it and does not claim to).
+///
+/// ## Why "stable", not just "round-trips to an equal value"
+///
+/// `serde`/`ciborium` already guarantee that decoding what you just encoded gives back an equal
+/// value — that is what `Deserialize` is for, and it is not the interesting property here. The
+/// property that actually matters for a content-addressed object is stronger: **the same logical
+/// value must always encode to the same bytes**, because the content address is computed over the
+/// bytes, not the value (§16.3). An encoder that is correct-but-unstable — one whose output
+/// depended on, say, a `HashMap`'s iteration order, or on insertion order in a type that should
+/// canonicalise it away — would let two publishers of the identical value compute two different
+/// addresses for it and silently fail to deduplicate, which is precisely the failure §16.3's
+/// content-addressing exists to prevent. [`assert_stable`] is the check for that: it does not stop
+/// at "decodes back to the same value", it insists the *second* encoding matches the *first*
+/// byte-for-byte.
+///
+/// ## Why decoding needs its own check, separate from encoding
+///
+/// [`decode_exact`] exists because `ciborium::from_reader` alone is not safe to use as a
+/// content-addressed decoder: it decodes exactly one CBOR item from a reader and returns, **without
+/// checking or reporting whether bytes remain afterwards**. Handed `<valid object> ++ <anything>`,
+/// it returns `Ok` with the leading object and silently discards the tail — verified directly
+/// against this workspace's pinned `ciborium 0.2.2` before writing this module: appending two
+/// arbitrary bytes after a valid encoding and decoding through `ciborium::from_reader` still
+/// returns `Ok` with the original value, and the two extra bytes are simply left unread. A decoder
+/// for a content-addressed object cannot inherit that behaviour: bytes that don't fully decode to
+/// nothing are not the same object the address was computed over, and a decoder that shrugs off a
+/// trailing byte would accept a payload as if it matched an address it does not actually match.
+/// [`decode_exact`] closes that by decoding through a `&mut &[u8]` (which ciborium advances as it
+/// reads) and then checking the slice is empty; [`assert_trailing_garbage_is_rejected`] exists
+/// specifically to demonstrate the gap `decode_exact` closes, by first confirming `ciborium`'s own
+/// `from_reader` does *not* catch it.
+pub mod roundtrip {
+    use serde::de::DeserializeOwned;
+    use serde::Serialize;
+
+    /// Encode `value`, decode it back, re-encode the decoded value, and assert every step agrees
+    /// byte-for-byte with the first encoding. See the [module documentation](self) for why this is
+    /// the property worth checking, rather than mere round-trip equality.
+    pub fn assert_stable<T>(value: &T)
+    where
+        T: Serialize + DeserializeOwned + PartialEq + std::fmt::Debug,
+    {
+        let mut first = Vec::new();
+        ciborium::into_writer(value, &mut first)
+            .expect("encoding a well-formed value must not fail");
+        let decoded: T =
+            decode_exact(&first).expect("decoding bytes this function just encoded must not fail");
+        assert_eq!(
+            &decoded, value,
+            "decoding the encoded bytes did not reproduce the original value"
+        );
+        let mut second = Vec::new();
+        ciborium::into_writer(&decoded, &mut second)
+            .expect("re-encoding the decoded value must not fail");
+        assert_eq!(
+            first, second,
+            "re-encoding the decoded value produced different bytes — the encoder is not stable, \
+             and an unstable encoder breaks content addressing: two publishers of the identical \
+             value would compute two different addresses for it and silently fail to deduplicate"
+        );
+    }
+
+    /// Decode exactly one `T` from `bytes`, refusing to succeed unless every byte is consumed.
+    ///
+    /// See the [module documentation](self) for why this check does not come for free from
+    /// `ciborium::from_reader` and has to be performed explicitly.
+    pub fn decode_exact<T>(bytes: &[u8]) -> Result<T, String>
+    where
+        T: DeserializeOwned,
+    {
+        let mut cursor: &[u8] = bytes;
+        let value: T = ciborium::from_reader(&mut cursor).map_err(|e| e.to_string())?;
+        if !cursor.is_empty() {
+            return Err(format!(
+                "{} trailing byte(s) after a decoded object were not consumed",
+                cursor.len()
+            ));
+        }
+        Ok(value)
+    }
+
+    /// Assert that truncating the last byte off `value`'s encoding makes it fail to decode.
+    ///
+    /// A truncated buffer decoding to *something* — even a different, shorter-but-valid value —
+    /// would mean a corrupted or partially-received object could be silently accepted as a
+    /// different, well-formed one instead of being rejected.
+    pub fn assert_truncation_is_rejected<T>(value: &T)
+    where
+        T: Serialize + DeserializeOwned + std::fmt::Debug,
+    {
+        let mut bytes = Vec::new();
+        ciborium::into_writer(value, &mut bytes).expect("encode");
+        assert!(!bytes.is_empty(), "an encoded value must not be zero bytes");
+        let truncated = &bytes[..bytes.len() - 1];
+        let result: Result<T, String> = decode_exact(truncated);
+        assert!(
+            result.is_err(),
+            "a truncated encoding decoded successfully as {result:?}, when it should have been \
+             rejected as incomplete"
+        );
+    }
+
+    /// Assert that appending a byte after `value`'s encoding makes it fail to decode.
+    ///
+    /// This is true only because [`decode_exact`] explicitly checks for a fully-consumed reader —
+    /// see the [module documentation](self) for the confirmed-by-experiment fact that
+    /// `ciborium::from_reader` alone does **not** reject trailing bytes on its own, and would
+    /// silently accept `<valid object> ++ <garbage>` as the leading object.
+    pub fn assert_trailing_garbage_is_rejected<T>(value: &T)
+    where
+        T: Serialize + DeserializeOwned + std::fmt::Debug,
+    {
+        let mut bytes = Vec::new();
+        ciborium::into_writer(value, &mut bytes).expect("encode");
+        bytes.push(0xFF);
+        let result: Result<T, String> = decode_exact(&bytes);
+        assert!(
+            result.is_err(),
+            "an encoding with trailing garbage appended decoded successfully as {result:?}, when \
+             it should have been rejected"
+        );
+    }
+}
+
 /// Errors shared across the Soko crates.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -192,5 +324,60 @@ mod tests {
             currency: ZAR,
         };
         assert!(refund_delta.is_negative());
+    }
+
+    // ---- Round-trip stability (see the `roundtrip` module docs for why this is checked at all) --
+
+    /// `ContentAddress` wraps an arbitrary byte string — the case most likely to expose an encoder
+    /// that treats bytes and text differently, since CBOR has distinct major types for the two.
+    #[test]
+    fn content_address_roundtrips_stably() {
+        let addr = ContentAddress(vec![0, 1, 2, 253, 254, 255]);
+        roundtrip::assert_stable(&addr);
+        roundtrip::assert_truncation_is_rejected(&addr);
+        roundtrip::assert_trailing_garbage_is_rejected(&addr);
+    }
+
+    #[test]
+    fn identity_key_roundtrips_stably() {
+        let key = IdentityKey(vec![9; 32]);
+        roundtrip::assert_stable(&key);
+        roundtrip::assert_truncation_is_rejected(&key);
+        roundtrip::assert_trailing_garbage_is_rejected(&key);
+    }
+
+    /// Negative timestamps (pre-1970) are representable and must not be special-cased away.
+    #[test]
+    fn timestamp_roundtrips_stably_including_negative_values() {
+        for ts in [Timestamp(0), Timestamp(1_700_000_000_000), Timestamp(-1)] {
+            roundtrip::assert_stable(&ts);
+        }
+        roundtrip::assert_truncation_is_rejected(&Timestamp(1_700_000_000_000));
+        roundtrip::assert_trailing_garbage_is_rejected(&Timestamp(1_700_000_000_000));
+    }
+
+    #[test]
+    fn country_and_currency_roundtrip_stably() {
+        let za: Country = Country(*b"ZA");
+        let jpy: Currency = Currency(*b"JPY");
+        roundtrip::assert_stable(&za);
+        roundtrip::assert_stable(&jpy);
+        roundtrip::assert_truncation_is_rejected(&za);
+        roundtrip::assert_trailing_garbage_is_rejected(&jpy);
+    }
+
+    /// `Money` via both construction paths — the checked [`Money::price`] and the plain struct
+    /// literal a refund uses — since the two must encode identically shaped values.
+    #[test]
+    fn money_roundtrips_stably_positive_and_negative() {
+        let price = Money::price(45_000, ZAR).unwrap();
+        let refund = Money {
+            minor_units: -5_000,
+            currency: ZAR,
+        };
+        roundtrip::assert_stable(&price);
+        roundtrip::assert_stable(&refund);
+        roundtrip::assert_truncation_is_rejected(&price);
+        roundtrip::assert_trailing_garbage_is_rejected(&price);
     }
 }

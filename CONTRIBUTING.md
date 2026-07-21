@@ -34,6 +34,24 @@ described below. A PR that doesn't pass them locally won't pass there either.
 Regenerate diagrams with the tool rather than hand-editing an image — a diagram maintained as a
 static file drifts from the prose it illustrates, and nobody notices until it's wrong.
 
+## Coverage
+
+```sh
+cargo install cargo-llvm-cov --locked   # once
+cargo llvm-cov --workspace              # text summary
+cargo llvm-cov --workspace --html       # target/llvm-cov/html/index.html, browsable
+```
+
+CI runs this on every push and PR (the `coverage` job) and posts the summary to the job's summary
+page. **There is no coverage threshold, and none is planned.** A percentage gate rewards tests
+written to move the number rather than tests written to catch a bug, and it is gameable by
+asserting nothing while merely executing a line. Coverage here is reported so a human can look at
+it and ask "why is this at 0%?" about a specific file — which is exactly the question nobody was
+asking about `crates/soko-gateway/src/bin/storefront.rs` before it had any tests at all, despite
+being the only user-facing surface in the project. If you're reading this because you're about to
+add a `--fail-under-lines` or similar: don't — raise it as a discussion first, because the point
+above is the reasoning, not an oversight.
+
 ## Two hard review gates
 
 These are enforced beyond "please don't":

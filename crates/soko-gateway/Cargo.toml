@@ -20,3 +20,9 @@ soko-offer = { path = "../soko-offer" }
 soko-delivery = { path = "../soko-delivery" }
 soko-trust = { path = "../soko-trust" }
 serde.workspace = true
+
+[dev-dependencies]
+# Tests only — see the doc comment on `soko_jurisdiction_place` in `src/bin/storefront.rs`. Used
+# to check that local restatement against the real `place_of_supply` derivation it claims to
+# agree with; never linked into the shipped `soko-storefront` binary.
+soko-jurisdiction = { path = "../soko-jurisdiction" }
