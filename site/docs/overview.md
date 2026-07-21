@@ -27,7 +27,7 @@ TRACT separates them:
 | | Centralized platform | TRACT / Soko |
 |---|---|---|
 | Your catalogue | rows in their database | a signed feed you publish |
-| Product identity | the platform issues an ID | a content address; identical records converge by construction |
+| Product identity | the platform issues an ID | a content address; identical records converge by construction — [but see the limit](./catalogue.md#the-identity-ladder) |
 | Who describes the product | the platform | the manufacturer, by signature |
 | Who can delist you | the platform | nobody |
 | Your cart | a session on their server | CRDT state on your own devices |
@@ -37,13 +37,17 @@ TRACT separates them:
 
 ## What it does not buy
 
-Three things stay true and the spec states them on its first page rather than burying them:
+Four things stay true, and the spec states them on its first page rather than burying them:
 
-1. **A shopper without a keypair must trust a gateway to render the store honestly.** Unlike
+1. **Cross-publisher product identity is unproven.** Identical bytes converge trivially; two shops
+   describing the same shoe do not. No deployed system achieves it without a licensed registry, and
+   the canonicalisation rules — not the hashing — are where the real work is. See
+   [Catalogue](./catalogue.md).
+2. **A shopper without a keypair must trust a gateway to render the store honestly.** Unlike
    DMTAP's mail gateway, this never self-extinguishes, because browsers are permanent.
-2. **Escrow is an operator class.** Holding money for strangers is licensed activity; TRACT
+3. **Escrow is an operator class.** Holding money for strangers is licensed activity; TRACT
    confines that role rather than pretending a protocol can dissolve it.
-3. **There is no canonical star rating.** Computing one requires an authority that aggregates and
+4. **There is no canonical star rating.** Computing one requires an authority that aggregates and
    ranks, which is the thing being removed.
 
 See the [threat model](./threat-model.md), which collects every operator class and residual in one place.

@@ -21,6 +21,31 @@
 //! quota *strands* that stock until it rejoins. The counter trades availability for safety, which
 //! is the correct trade for inventory but is not free.
 //!
+//! ## What the bounded counter does NOT protect against
+//!
+//! This is the boundary that matters most, because it is easy to overclaim. The escrow/demarcation
+//! literature this follows (O'Neil 1986 → Barbará-Millá & Garcia-Molina 1994 → Balegas et al.,
+//! SRDS 2015, shipped as AntidoteDB's `antidote_crdt_counter_b`) assumes a **crash-recovery failure
+//! model with durable state — not a Byzantine one**.
+//!
+//! So: a lying or state-losing replica simply oversells. The guarantee covers **a seller's own
+//! replicas, which trust each other**. It says nothing about stock held across mutually distrusting
+//! parties, and it does **not** protect a buyer from a dishonest seller. Bounded counters protect a
+//! seller from their own concurrency. Conflating those two would be a safety claim no result here
+//! supports.
+//!
+//! Three further consequences, none of them removable by better code:
+//!
+//! - **A replica needs an internal serialization point** — a single writer, a compare-and-swap, or
+//!   consensus. A replica cannot itself be a set of mutually uncoordinated nodes; the coordination
+//!   is pushed down one level and made local, not eliminated.
+//! - **Reclaiming a dead replica's quota is a fallible decision.** If the failure detector is
+//!   wrong, quota is issued twice and the invariant breaks. [`BoundedCounter`] deliberately exposes
+//!   no reclaim operation, because a safe one needs a policy this crate does not have.
+//! - **Transfer names a recipient.** At three or more replicas it is not anonymous, which
+//!   reintroduces an allocation policy — see [`BoundedCounter::transfer_to`], whose signature makes
+//!   that explicit by requiring the recipient rather than releasing quota into a pool.
+//!
 //! ## No cross-seller atomicity
 //!
 //! A multi-seller cart is a set of independent orders. One seller declining does not roll back
@@ -106,6 +131,12 @@ impl BoundedCounter {
     }
 
     /// Move quota to another replica. Conserves total quota by construction.
+    ///
+    /// The signature takes the recipient deliberately. At three or more replicas a transfer is not
+    /// anonymous — somebody has to decide who receives the quota — and taking `&mut other` makes
+    /// that allocation decision visible at the call site instead of hiding it behind a pool. There
+    /// is no `release_into_pool` counterpart, because a pool would need an allocator, and an
+    /// allocator is the coordinator this design is trying not to require.
     pub fn transfer_to(&mut self, other: &mut BoundedCounter, n: u32) -> Result<(), ReserveError> {
         if n > self.quota {
             return Err(ReserveError::QuotaExhausted);
