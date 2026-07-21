@@ -869,6 +869,7 @@ fn settle_types_roundtrip_stably() {
         max_order_value: zar(500_000),
         excluded_categories: vec!["alcohol".into()],
         authorities: vec!["example authorisation".into()],
+        declines: vec![],
     };
     roundtrip::assert_stable(&scope);
     roundtrip::assert_truncation_is_rejected(&scope);

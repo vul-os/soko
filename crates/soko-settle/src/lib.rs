@@ -128,9 +128,37 @@ pub struct EscrowScope {
     pub excluded_categories: Vec<String>,
     /// The authorisations claimed. Prose, because regulators do not share a schema.
     pub authorities: Vec<String>,
+    /// Transaction shapes this operator declines regardless of everything above (D1).
+    pub declines: Vec<DeclinedClass>,
 }
 
 impl soko_core::public::Publishable for EscrowScope {}
+
+/// A class of transaction an operator declines to serve.
+///
+/// Distinct from `excluded_categories`, which is about *what* is sold. These are about the shape of
+/// the transaction, and they exist because that is the shape tax law actually keys on.
+///
+/// The motivating case is recorded as decision D1: EU VAT Art 14a treats an electronic interface as
+/// the deemed supplier for imported consignments below a value threshold, and for supplies within a
+/// region by sellers not established in it. An operator that declines both is outside the rule on
+/// its face — but until it can *declare* that, "we don't serve those" is an intention rather than
+/// something a buyer's node can check before routing a trade.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum DeclinedClass {
+    /// Imported consignments into `region` whose intrinsic value is at or below `at_or_below`.
+    LowValueImport {
+        /// The destination region the rule attaches to.
+        region: Country,
+        /// The threshold, inclusive.
+        at_or_below: Money,
+    },
+    /// Supplies into `region` by a seller not established in it.
+    NonResidentSellerInto {
+        /// The destination region.
+        region: Country,
+    },
+}
 
 /// The concrete trade being checked against a scope.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -147,6 +175,8 @@ pub struct TradeContext {
     pub rail_class: RailClass,
     /// Category of the goods or service.
     pub category: String,
+    /// Whether the goods cross a border into the buyer's country.
+    pub is_import: bool,
 }
 
 /// Whether escrow is available for a trade, and if not, why.
@@ -183,6 +213,8 @@ pub enum ScopeMismatch {
     ValueCeiling,
     /// The category is refused.
     Category,
+    /// The transaction's shape is one this operator declines (D1).
+    DeclinedClass,
 }
 
 impl EscrowScope {
@@ -224,6 +256,9 @@ impl EscrowScope {
         if self.excluded_categories.iter().any(|c| c == &t.category) {
             mismatches.push(M::Category);
         }
+        if self.declines.iter().any(|d| d.matches(t)) {
+            mismatches.push(M::DeclinedClass);
+        }
         if mismatches.is_empty() {
             EscrowAvailability::Available(self.operator.clone())
         } else {
@@ -247,6 +282,30 @@ impl EscrowScope {
             return Err(soko_core::Error::NegativeAmount);
         }
         Ok(())
+    }
+}
+
+impl DeclinedClass {
+    /// Whether this declined class covers the trade.
+    ///
+    /// Deliberately conservative on the value threshold: `at_or_below` is inclusive, matching how
+    /// the rules that motivate this are written. A trade sitting exactly on the threshold is
+    /// declined, because being one cent inside a rule is being inside it.
+    pub fn matches(&self, t: &TradeContext) -> bool {
+        match self {
+            DeclinedClass::LowValueImport {
+                region,
+                at_or_below,
+            } => {
+                t.is_import
+                    && t.buyer_country == *region
+                    && t.value.currency == at_or_below.currency
+                    && t.value.minor_units <= at_or_below.minor_units
+            }
+            DeclinedClass::NonResidentSellerInto { region } => {
+                t.buyer_country == *region && t.seller_country != *region
+            }
+        }
     }
 }
 
@@ -315,6 +374,16 @@ impl EscrowScope {
         let mut authorities = self.authorities.clone();
         authorities.extend(other.authorities.iter().cloned());
 
+        // UNION, for the same reason exclusions union: a decline is a refusal, and intersecting
+        // refusals would keep only what both parties decline and silently accept what one of them
+        // will not touch.
+        let mut declines = self.declines.clone();
+        for d in &other.declines {
+            if !declines.contains(d) {
+                declines.push(d.clone());
+            }
+        }
+
         Some(EscrowScope {
             // The narrowed scope is still served by THIS operator; the other side is a policy, not
             // a second custodian.
@@ -327,6 +396,7 @@ impl EscrowScope {
             max_order_value,
             excluded_categories,
             authorities,
+            declines,
         })
     }
 }
@@ -393,6 +463,7 @@ mod tests {
             },
             excluded_categories: vec!["alcohol".into()],
             authorities: vec!["TPPP registration".into()],
+            declines: vec![],
         }
     }
 
@@ -407,7 +478,127 @@ mod tests {
             },
             rail_class: RailClass::CustodialReversible,
             category: "books".into(),
+            is_import: false,
         }
+    }
+
+    /// Decision D1 made executable: an operator that declines low-value imports is outside EU VAT
+    /// Art 14a on its face, and a buyer's node can now check that before routing a trade instead
+    /// of taking the operator's word for it.
+    #[test]
+    fn a_declined_transaction_class_refuses_an_otherwise_valid_trade() {
+        let eur = Currency(*b"EUR");
+        let mut s = scope();
+        s.currencies.push(eur);
+        s.buyer_countries.push(DE);
+        s.supply_countries.push(DE);
+        s.max_order_value = Money {
+            minor_units: 5_000_000,
+            currency: ZAR,
+        };
+        s.declines = vec![DeclinedClass::LowValueImport {
+            region: DE,
+            at_or_below: Money {
+                minor_units: 15_000,
+                currency: eur,
+            }, // EUR 150.00
+        }];
+
+        let low_value_import = TradeContext {
+            buyer_country: DE,
+            seller_country: ZA,
+            supply_country: DE,
+            value: Money {
+                minor_units: 9_900,
+                currency: eur,
+            },
+            rail_class: RailClass::CustodialReversible,
+            category: "books".into(),
+            is_import: true,
+        };
+        match s.check(&low_value_import) {
+            EscrowAvailability::None(reasons) => {
+                assert!(reasons.contains(&ScopeMismatch::DeclinedClass))
+            }
+            other => panic!("a declined class must refuse: {other:?}"),
+        }
+    }
+
+    /// The same goods above the threshold are served — the decline is about the transaction's
+    /// shape, not about the goods or the parties.
+    #[test]
+    fn the_same_trade_above_the_threshold_is_served() {
+        let eur = Currency(*b"EUR");
+        let mut s = scope();
+        s.currencies.push(eur);
+        s.buyer_countries.push(DE);
+        s.supply_countries.push(DE);
+        s.max_order_value = Money {
+            minor_units: 5_000_000,
+            currency: eur,
+        };
+        s.declines = vec![DeclinedClass::LowValueImport {
+            region: DE,
+            at_or_below: Money {
+                minor_units: 15_000,
+                currency: eur,
+            },
+        }];
+        let above = TradeContext {
+            buyer_country: DE,
+            seller_country: ZA,
+            supply_country: DE,
+            value: Money {
+                minor_units: 20_000,
+                currency: eur,
+            },
+            rail_class: RailClass::CustodialReversible,
+            category: "books".into(),
+            is_import: true,
+        };
+        assert!(matches!(s.check(&above), EscrowAvailability::Available(_)));
+    }
+
+    /// Exactly on the threshold is inside it. Being one cent inside a rule is being inside it, and
+    /// an exclusive comparison here would put an operator marginally in scope while believing
+    /// itself out of it.
+    #[test]
+    fn the_value_threshold_is_inclusive() {
+        let eur = Currency(*b"EUR");
+        let d = DeclinedClass::LowValueImport {
+            region: DE,
+            at_or_below: Money {
+                minor_units: 15_000,
+                currency: eur,
+            },
+        };
+        let at = TradeContext {
+            buyer_country: DE,
+            seller_country: ZA,
+            supply_country: DE,
+            value: Money {
+                minor_units: 15_000,
+                currency: eur,
+            },
+            rail_class: RailClass::CustodialReversible,
+            category: "books".into(),
+            is_import: true,
+        };
+        assert!(d.matches(&at));
+    }
+
+    /// A domestic sale is not an import, so the low-value decline does not touch it — which is the
+    /// whole point of D1: the wedge market is outside the rule already.
+    #[test]
+    fn a_domestic_trade_is_untouched_by_an_import_decline() {
+        let d = DeclinedClass::LowValueImport {
+            region: ZA,
+            at_or_below: Money {
+                minor_units: 15_000,
+                currency: ZAR,
+            },
+        };
+        assert!(!d.matches(&trade()), "domestic ZA->ZA is not an import");
     }
 
     /// The operation §9.4 describes and the code did not have: a gateway's declared scope narrowed
@@ -428,6 +619,7 @@ mod tests {
             },
             excluded_categories: vec!["weapons".into()],
             authorities: vec![],
+            declines: vec![],
         };
         let n = gateway.intersect(&buyer_policy).expect("these overlap");
         assert_eq!(

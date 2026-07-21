@@ -198,6 +198,7 @@ fn main() {
         max_order_value: zar(500_000),
         excluded_categories: vec![],
         authorities: vec!["example authorisation".into()],
+        declines: vec![],
     };
     let base = TradeContext {
         buyer_country: NZ,
@@ -206,6 +207,7 @@ fn main() {
         value: zar(90_000),
         rail_class: RailClass::CustodialReversible,
         category: "stationery".into(),
+        is_import: false,
     };
     let evt = TradeContext {
         supply_country: e,

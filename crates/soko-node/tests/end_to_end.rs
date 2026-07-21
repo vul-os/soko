@@ -267,6 +267,7 @@ fn a_complete_two_seller_trade_walks_through_every_crate() {
         max_order_value: zar(500_000),
         excluded_categories: vec!["alcohol".into()],
         authorities: vec!["example authorisation".into()],
+        declines: vec![],
     };
     let goods_trade = TradeContext {
         buyer_country: NZ,
@@ -275,6 +276,7 @@ fn a_complete_two_seller_trade_walks_through_every_crate() {
         value: zar(90_000),
         rail_class: RailClass::CustodialReversible,
         category: "stationery".into(),
+        is_import: false,
     };
     assert!(
         matches!(scope.check(&goods_trade), EscrowAvailability::Available(_)),
