@@ -78,3 +78,8 @@ the surface area cartcrft had to cover — bookings, subscriptions, B2B price li
 third-party logistics, duties, tax, channel sync — is the requirements list TRACT has to answer.
 What it could not do is any of it without a central database holding every tenant's rows behind
 row-level security, which is the one assumption TRACT removes.
+
+Commit hashes differ from the original repository: `.claude/` and environment paths were purged
+from the whole history with `git-filter-repo` before grafting, which rewrites every hash downstream
+of the first change. The content is otherwise intact, so this repository is a complete record of
+that history rather than a pointer to one.

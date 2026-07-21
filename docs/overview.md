@@ -46,7 +46,7 @@ Three things stay true and the spec states them on its first page rather than bu
 3. **There is no canonical star rating.** Computing one requires an authority that aggregates and
    ranks, which is the thing being removed.
 
-See [Honest limits](#) in the [threat model](./threat-model.md).
+See the [threat model](./threat-model.md), which collects every operator class and residual in one place.
 
 ## Where to read next
 
