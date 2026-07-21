@@ -179,6 +179,30 @@ cargo test --workspace     # 104 tests
 cargo tree -p soko-seam    # must stay one line — a dep here is inherited by every implementor
 ```
 
+## Help wanted
+
+The implementation's gaps are mostly ordinary work. The specification's are not — several are
+blocked on expertise this project does not have, and had multiple research passes return nothing
+verifiable. They are recorded as unevidenced rather than quietly asserted; see
+[TRACT's help-wanted](https://github.com/vul-os/tract/blob/main/docs/HELP-WANTED.md).
+
+**On this repository specifically:**
+
+- **Build something that speaks TRACT without reading this code.** It is the most valuable thing
+  anyone could do, and what would help most is not the implementation but a list of every place the
+  specification was ambiguous or wrong. The conformance vectors in the tract repo are derived from
+  the spec text by hand, so you can check an encoder against the document rather than against Soko.
+- **Try to break an invariant.** The two most valuable contributions so far were adversarial: a
+  review that found six invariants documented but not structurally enforced, and a conformance pass
+  that found the specification contradicting itself. Claims asserted in a doc comment with nothing
+  enforcing them are the pattern worth hunting.
+- **The parts that are genuinely just work:** networked transport for `soko-feed` (it publishes and
+  verifies against a directory today), the order flow over a real connection, and the gateway as a
+  service with custom domains.
+
+Ordinary contributions are welcome too — see [CONTRIBUTING.md](CONTRIBUTING.md) for the build,
+test and review gates.
+
 ## Architecture
 
 <p align="center">

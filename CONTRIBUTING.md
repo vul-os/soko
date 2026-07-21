@@ -116,3 +116,15 @@ this is handled at merge time — you don't need to match it in your own commits
 Pre-alpha. There is no packaged tool and no UI — contributions land in the crates and the docs.
 See [docs/roadmap.md](docs/roadmap.md) for where the specification stands and
 [ROADMAP.md](ROADMAP.md) for repository sequencing.
+
+## Where help is most needed
+
+Beyond ordinary contributions, several items are blocked on expertise rather than effort — data
+protection law, EU VAT, carrier API terms, privacy-preserving measurement, and reputation attack
+literature. Each had research passes that returned nothing verifiable, and each is recorded with
+its specific unanswered question in
+[TRACT's help-wanted](https://github.com/vul-os/tract/blob/main/docs/HELP-WANTED.md).
+
+The single most valuable contribution is an implementation of TRACT that does **not** read this
+code. One implementation and one specification derived from each other only prove they agree with
+one another; a second, independent one is what would establish that the document is buildable from.
