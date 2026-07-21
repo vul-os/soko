@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+
+  seam-has-no-dependencies:
+    # The seam's whole purpose is that implementing it costs nothing. A dependency added here is
+    # inherited by everyone who wires their own payment provider, so this is a CI gate rather than
+    # a comment somebody will eventually ignore.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: |
+          lines=$(cargo tree -p soko-seam --edges normal | grep -c .)
+          echo "cargo tree -p soko-seam -> $lines line(s)"
+          test "$lines" -eq 1 || { echo "::error::soko-seam gained a dependency"; cargo tree -p soko-seam; exit 1; }

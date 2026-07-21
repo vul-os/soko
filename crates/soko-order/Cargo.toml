@@ -1,0 +1,15 @@
+[package]
+name = "soko-order"
+description = "TRACT §6–§7 — buyer-held cart, bounded-counter inventory, sealed orders."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+soko-offer = { path = "../soko-offer" }
+serde.workspace = true
+thiserror.workspace = true

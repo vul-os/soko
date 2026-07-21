@@ -1,0 +1,18 @@
+[package]
+name = "soko-node"
+description = "The Soko node: publishes a catalogue, receives sealed orders, computes routing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+soko-catalog = { path = "../soko-catalog" }
+soko-delivery = { path = "../soko-delivery" }
+soko-order = { path = "../soko-order" }
+soko-settle = { path = "../soko-settle" }
+soko-trust = { path = "../soko-trust" }
+soko-jurisdiction = { path = "../soko-jurisdiction" }

@@ -36,16 +36,16 @@ Soko separates them. Your catalogue is a signed feed you publish. Your cart is C
 own devices. Delivery is computed locally from published rate cards rather than brokered. Nobody
 can delist you, and leaving costs a DNS change.
 
-```
-                sellers                 discovery              buyer
-        ┌──────────────────────┐   ┌───────────────┐   ┌──────────────────┐
-        │  Seller A  ──┐       │   │               │   │                  │
-        │  Seller B  ──┼──────────▶│  any index    │──▶│   one cart       │
-        │  Seller C  ──┘       │   │  derived,     │   │   routing local  │
-        │  signed feeds        │   │  rebuildable  │   │   sealed orders  │
-        └──────────────────────┘   └───────────────┘   └──────────────────┘
-              ▲                                                  │
-              └──────────────  sealed order per seller  ─────────┘
+```mermaid
+flowchart LR
+  SA["Seller A<br/><i>signed feed</i>"] --> IDX
+  SB["Seller B<br/><i>signed feed</i>"] --> IDX
+  SC["Seller C<br/><i>signed feed</i>"] --> IDX
+  IDX["Any index<br/><i>derived · rebuildable<br/>authoritative for nothing</i>"] --> B
+  B["<b>Buyer node</b><br/>one cart across all three<br/>routing computed here"]
+  B -. "sealed order" .-> SA
+  B -. "sealed order" .-> SB
+  B -. "sealed order" .-> SC
 ```
 
 No party sees the whole cart. The index holds no authority — a disagreement between an index and a
@@ -118,25 +118,37 @@ them would be easier to believe and worse to build on.
 failure mode being avoided is a spec that is a description of whatever the first implementation
 happened to do.
 
-| Crate | TRACT § | Status |
+| Crate | TRACT § | Covers |
 |---|---|---|
-| `soko-seam` | §9, §12 | scaffold — settlement/escrow/storefront traits that name no provider |
-| `soko-core` | §16 | scaffold — object model, `public` / `sealed` split |
-| everything else | — | see [`Cargo.toml`](Cargo.toml) for the planned order |
+| `soko-seam` | §9, §12 | settlement / escrow / storefront traits that name no provider — **zero dependencies** |
+| `soko-core` | §16 | content addresses, money, places, and the `public` / `sealed` type split |
+| `soko-offer` | §3–§5 | the four axes, and the place-of-supply derivation that falls out of fulfilment |
+| `soko-catalog` | §2 | product records, product groups, the identity ladder, canonicalisation |
+| `soko-order` | §6–§7 | buyer-held cart, per-seller split, bounded-counter inventory, sealed orders |
+| `soko-delivery` | §8 | rate cards, volumetric weight, legs, consignments, **distributors**, route comparison |
+| `soko-settle` | §9 | payment attestations, rail classes, **escrow scope with fail-closed intersection** |
+| `soko-trust` | §10 | purchase-attested reviews, per-index weighting, local-only scoring |
+| `soko-jurisdiction` | §11 | the four anchors, place-of-supply resolution, responsible parties |
+| `soko-gateway` | §12 | storefront binding and the origin-isolation rule |
+| `soko-node` | — | the node binary |
+
+The whole protocol surface has a home, and **37 tests** cover the parts where getting it wrong is
+silent: volumetric weight, currency mismatch, escrow scope intersection, place of supply for an
+event held abroad, concurrent replicas not overselling, and unattested reviews not moving a score.
 
 ```sh
-cargo check --workspace
-cargo tree -p soko-seam   # must stay one line — a dep here is inherited by every implementor
+cargo test --workspace     # 37 tests
+cargo tree -p soko-seam    # must stay one line — a dep here is inherited by every implementor
 ```
 
 ## Architecture
 
-```
-DMTAP substrate:  Identity · Feeds & Blobs · Sync · Infra Roles · Wake
-                                   │
-TRACT:            catalogue · offer · cart · order · delivery · settlement · trust
-                                   │
-Soko:             this repository
+```mermaid
+flowchart TD
+  SUB["<b>DMTAP substrate</b><br/>Identity · Feeds &amp; Blobs · Sync · Infra Roles · Wake"]
+  TR["<b>TRACT</b><br/>catalogue · offer · cart · order · delivery · settlement · trust"]
+  SK["<b>Soko</b><br/>this repository"]
+  SUB --> TR --> SK
 ```
 
 Soko implements no cryptography. Identity, signing, content addressing, feeds and sync come from the
@@ -150,18 +162,6 @@ content-addressed and irrevocable, so a right to erasure cannot be satisfied aga
 **Nothing personal may ever be published** — orders, addresses and contact details are sealed and
 deletable at the edges. Keeping the two in separate type families is cheaper than remembering the
 rule at every call site.
-
-## History
-
-This repository begins on the commit history of **cartcrft**, its direct predecessor: a centralized
-multi-tenant commerce platform. None of that code carries over — Soko is Rust on a signed-object
-substrate, not TypeScript on a shared database — but the history does, because the surface area
-cartcrft had to cover (bookings, subscriptions, B2B price lists, returns, loyalty, 3PL, duties, tax,
-channel sync) is the requirements list TRACT has to answer.
-
-`.claude/` and environment paths were purged from the entire history with `git-filter-repo` before
-grafting, which rewrites every downstream hash. The content is intact, so this repository is a
-complete record of that history rather than a pointer to one.
 
 ## Licence
 

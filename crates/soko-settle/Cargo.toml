@@ -1,0 +1,14 @@
+[package]
+name = "soko-settle"
+description = "TRACT §9 — payment attestations, rail classes, escrow scope and lifecycle."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+soko-seam = { path = "../soko-seam" }
+serde.workspace = true

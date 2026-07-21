@@ -1,25 +1,22 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/soko-core",
     "crates/soko-seam",
+    "crates/soko-core",
+    "crates/soko-offer",
+    "crates/soko-catalog",
+    "crates/soko-order",
+    "crates/soko-delivery",
+    "crates/soko-settle",
+    "crates/soko-trust",
+    "crates/soko-jurisdiction",
+    "crates/soko-gateway",
+    "crates/soko-node",
 ]
 
-# Crates land as their TRACT section is specified, not before. Adding an empty crate per
-# section up front would claim coverage that does not exist; the workspace is meant to be
-# readable as an honest statement of what is implemented.
-#
-# Planned, in the order the spec settles them:
-#   soko-catalog      §2  product records, offers, variants, the product-identity ladder
-#   soko-availability §3  stock, slots (RFC 5545), capacity, made-to-order
-#   soko-order        §6,§7  buyer-side cart CRDT, sealed orders, the order state machine
-#   soko-delivery     §8  rate cards, legs, consolidation, local route computation
-#   soko-settle       §9  the payment seam over patala; escrow attestations
-#   soko-trust        §10 purchase-attested reviews, local ranking
-#   soko-jurisdiction §11 the four anchors, scope declarations, tax fields
-#   soko-node             the node binary
-#   soko-gateway          the storefront gateway (SEPARATE process — never shares an
-#                         address space with identity keys; see TRACT §12)
+# Every crate covers one part of the protocol. They exist and compile; the depth behind each
+# type varies by how far its TRACT section has been specified, and each crate's docs say so.
+# Dependency direction is fixed: everything depends on soko-seam, soko-seam depends on nothing.
 
 [workspace.package]
 version = "0.1.0"

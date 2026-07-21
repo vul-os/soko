@@ -1,0 +1,13 @@
+[package]
+name = "soko-trust"
+description = "TRACT §10 — purchase-attested reviews and local-only ranking."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+serde.workspace = true

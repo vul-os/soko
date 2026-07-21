@@ -1,0 +1,14 @@
+[package]
+name = "soko-gateway"
+description = "TRACT §12 — storefront rendering contract and per-store origin isolation."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+soko-seam = { path = "../soko-seam" }
+serde.workspace = true

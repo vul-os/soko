@@ -1,0 +1,14 @@
+[package]
+name = "soko-catalog"
+description = "TRACT §2 — product records, offers, variants and the product-identity ladder."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+soko-offer = { path = "../soko-offer" }
+serde.workspace = true

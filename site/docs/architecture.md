@@ -12,14 +12,10 @@ that drifts.
 
 ## Dependency direction, fixed from the first commit
 
-```
-soko-seam  (zero dependencies)
-    ^
-    |
-soko-core  (objects, wire format)
-    ^
-    |
-everything else
+```mermaid
+flowchart BT
+  E["everything else"] --> C["<b>soko-core</b><br/><i>objects, wire format</i>"]
+  C --> S["<b>soko-seam</b><br/><i>zero dependencies</i>"]
 ```
 
 `soko-seam` depends on nothing and must stay that way — `cargo tree -p soko-seam` is one line. A
@@ -28,19 +24,40 @@ exists to prevent.
 
 ## Crates
 
-| Crate | TRACT § | Status | Purpose |
-|---|---|---|---|
-| `soko-seam` | §9, §12 | scaffold | settlement, escrow and storefront traits that name no provider |
-| `soko-core` | §16 | scaffold | object model, split `public` / `sealed` |
-| `soko-catalog` | §2 | planned | product records, offers, variants, the identity ladder |
-| `soko-availability` | §3 | planned | stock, slots, capacity, made-to-order |
-| `soko-order` | §6–§7 | planned | buyer-side cart CRDT, sealed orders, state machine |
-| `soko-delivery` | §8 | planned | rate cards, legs, consolidation, local routing |
-| `soko-settle` | §9 | planned | payment seam wiring; escrow attestations |
-| `soko-trust` | §10 | planned | purchase-attested reviews, local ranking |
-| `soko-jurisdiction` | §11 | planned | the four anchors, scope declarations |
-| `soko-node` | — | planned | the node binary |
-| `soko-gateway` | §12 | planned | storefront gateway — **separate process** |
+| Crate | TRACT § | Covers |
+|---|---|---|
+| `soko-seam` | §9, §12 | settlement / escrow / storefront traits that name no provider — **zero dependencies, enforced in CI** |
+| `soko-core` | §16 | content addresses, money, places, time, and the `public` / `sealed` split |
+| `soko-offer` | §3–§5 | the four axes; `place_of_supply_kind` derives the tax anchor from fulfilment |
+| `soko-catalog` | §2 | product records, groups, identity ladder, `canonicalise` |
+| `soko-order` | §6–§7 | cart, per-seller split, `BoundedCounter` inventory, sealed orders |
+| `soko-delivery` | §8 | rate cards, volumetric weight, legs, consignments, distributors, route comparison |
+| `soko-settle` | §9 | payment attestations, rail classes, `EscrowScope::check` |
+| `soko-trust` | §10 | reviews, purchase attestation, per-index `Weighting`, `local_score` |
+| `soko-jurisdiction` | §11 | four anchors, `place_of_supply`, `ResponsibleParties::may_offer_into` |
+| `soko-gateway` | §12 | store bindings and `origin_isolated_from` |
+| `soko-node` | — | the node binary |
+
+The gateway is a crate but **not a role of the node binary**: it terminates untrusted connections
+and renders untrusted merchant bundles, so it runs as a separate process with no access to identity
+keys or the object store (§12.4).
+
+## What the tests actually pin
+
+37 tests, concentrated on the places where being wrong is silent rather than loud:
+
+- **volumetric weight** — a large light parcel priced on actual weight under-quotes, and the buyer
+  finds out at the counter;
+- **currency mismatch** — a route total that silently converts is a wrong total that looks right,
+  and it gets carried into a signed order;
+- **escrow scope** — an operator licensed for one region must be refused for another, including
+  when only the *place of supply* is out of region;
+- **place of supply** — an event held abroad is taxed at the venue; a mode that needs a venue and
+  has none refuses to guess rather than falling back to a party's country;
+- **oversell** — two replicas selling concurrently with no coordination cannot exceed total stock,
+  and a replica can be exhausted while stock remains elsewhere;
+- **reputation** — unattested reviews do not move a conservative score, and two indexes with
+  different weightings legitimately disagree.
 
 ## The public/sealed split is structural
 
@@ -70,16 +87,3 @@ The gateway terminates untrusted connections and renders untrusted merchant bund
 separate process with no access to identity keys or the object store, and serves every store from
 its own origin. "One binary, several roles" never means one address space.
 
-## History
-
-This repository begins on the commit history of **cartcrft**, a centralized multi-tenant commerce
-platform that was its direct predecessor. None of that code carries over. The history does, because
-the surface area cartcrft had to cover — bookings, subscriptions, B2B price lists, returns, loyalty,
-third-party logistics, duties, tax, channel sync — is the requirements list TRACT has to answer.
-What it could not do is any of it without a central database holding every tenant's rows behind
-row-level security, which is the one assumption TRACT removes.
-
-Commit hashes differ from the original repository: `.claude/` and environment paths were purged
-from the whole history with `git-filter-repo` before grafting, which rewrites every hash downstream
-of the first change. The content is otherwise intact, so this repository is a complete record of
-that history rather than a pointer to one.

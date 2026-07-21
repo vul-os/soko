@@ -101,6 +101,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "soko-catalog"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+ "soko-offer",
+]
+
+[[package]]
 name = "soko-core"
 version = "0.1.0"
 dependencies = [
@@ -111,8 +120,82 @@ dependencies = [
 ]
 
 [[package]]
+name = "soko-delivery"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+]
+
+[[package]]
+name = "soko-gateway"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+ "soko-seam",
+]
+
+[[package]]
+name = "soko-jurisdiction"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+ "soko-offer",
+]
+
+[[package]]
+name = "soko-node"
+version = "0.1.0"
+dependencies = [
+ "soko-catalog",
+ "soko-core",
+ "soko-delivery",
+ "soko-jurisdiction",
+ "soko-order",
+ "soko-settle",
+ "soko-trust",
+]
+
+[[package]]
+name = "soko-offer"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+]
+
+[[package]]
+name = "soko-order"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+ "soko-offer",
+ "thiserror",
+]
+
+[[package]]
 name = "soko-seam"
 version = "0.1.0"
+
+[[package]]
+name = "soko-settle"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+ "soko-seam",
+]
+
+[[package]]
+name = "soko-trust"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+]
 
 [[package]]
 name = "syn"

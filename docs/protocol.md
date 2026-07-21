@@ -22,10 +22,14 @@ the commerce spine.
 | **Infrastructure Roles** — announce/resolve, relay, mailbox, cache | reachability for stores and buyers behind NAT |
 | **Wake** — content-free push | waking a sleeping seller node when an order arrives |
 
-```
-DMTAP substrate:  Identity · Feeds & Blobs · Sync · Infra Roles · Wake
-                                   |
-TRACT:            catalogue · offer · cart · order · delivery · settlement · trust
+```mermaid
+flowchart TD
+  subgraph S["DMTAP substrate — the narrow waist"]
+    I["① Identity"]; F["② Feeds &amp; Blobs"]; Y["③ Sync"]; R["④ Infra Roles"]; W["⑤ Wake"]
+  end
+  S --> T["<b>TRACT</b> — the commerce spine<br/>catalogue · offer · cart · order · delivery · settlement · trust"]
+  S --> M["DMTAP-mail"]
+  S --> O["other profiles<br/><i>CAD · video</i>"]
 ```
 
 **TRACT allocates no new cryptography.** No new hash construction, no new signature framing, no

@@ -1,0 +1,13 @@
+[package]
+name = "soko-offer"
+description = "TRACT §3–§5 — the four offer axes: item, availability, fulfilment, consideration."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+serde.workspace = true
