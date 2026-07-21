@@ -1,0 +1,31 @@
+{
+  "title": "Soko",
+  "tagline": "Commerce without a marketplace. A keypair is a store.",
+  "logo": "/product-logos/soko.svg",
+  "home": "/products/soko/landing.html",
+  "repo": "https://github.com/vul-os/soko",
+  "brand": {
+    "accent": "#16D97F",
+    "accentHover": "#0FA95F",
+    "font": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif",
+    "monoFont": "ui-monospace, SFMono-Regular, 'SF Mono', 'Geist Mono', Menlo, Consolas, monospace"
+  },
+  "pages": [
+    { "slug": "overview",     "title": "Overview",                  "file": "overview.md" },
+    { "slug": "protocol",     "title": "The TRACT protocol",        "file": "protocol.md" },
+    { "slug": "catalogue",    "title": "Catalogue & product identity", "file": "catalogue.md" },
+    { "slug": "offers",       "title": "Offers: the four axes",     "file": "offers.md" },
+    { "slug": "cart",         "title": "Cart & checkout",           "file": "cart.md" },
+    { "slug": "delivery",     "title": "Delivery & routing",        "file": "delivery.md" },
+    { "slug": "settlement",   "title": "Settlement & escrow",       "file": "settlement.md" },
+    { "slug": "trust",        "title": "Trust & reviews",           "file": "trust.md" },
+    { "slug": "jurisdiction", "title": "Jurisdiction & tax",        "file": "jurisdiction.md" },
+    { "slug": "gateway",      "title": "Gateways",                  "file": "gateway.md" },
+    { "slug": "analytics",    "title": "Analytics",                 "file": "analytics.md" },
+    { "slug": "self-host",    "title": "Self-hosting",              "file": "self-host.md" },
+    { "slug": "architecture", "title": "Architecture",              "file": "architecture.md" },
+    { "slug": "threat-model", "title": "Threat model",              "file": "threat-model.md" },
+    { "slug": "faq",          "title": "FAQ",                       "file": "faq.md" },
+    { "slug": "roadmap",      "title": "Roadmap",                   "file": "roadmap.md" }
+  ]
+}

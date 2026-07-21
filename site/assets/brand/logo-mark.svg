@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Soko mark">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#16D97F"/><stop offset="1" stop-color="#0FA95F"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0E0E10"/>
+  <!-- A market stall canopy over three independent stalls: many sellers, one view. -->
+  <path d="M12 24 L20 14 H44 L52 24 Z" fill="url(#g)"/>
+  <rect x="14" y="28" width="10" height="22" rx="3" fill="url(#g)" opacity=".95"/>
+  <rect x="27" y="28" width="10" height="22" rx="3" fill="url(#g)" opacity=".65"/>
+  <rect x="40" y="28" width="10" height="22" rx="3" fill="url(#g)" opacity=".4"/>
+</svg>
