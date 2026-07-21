@@ -143,12 +143,26 @@ happened to do.
 | `soko-gateway` | §12 | storefront binding and the origin-isolation rule |
 | `soko-node` | — | the node binary |
 
-The whole protocol surface has a home, and **37 tests** cover the parts where getting it wrong is
+The whole protocol surface has a home, and **39 tests** cover the parts where getting it wrong is
 silent: volumetric weight, currency mismatch, escrow scope intersection, place of supply for an
 event held abroad, concurrent replicas not overselling, and unattested reviews not moving a score.
 
+Two of those are an **end-to-end trade across every crate** — deliberately the awkward case, not
+the easy one: two sellers who have never heard of each other in one cart, one shipping a physical
+good and the other selling admission to an event in a third country, a buyer resident in neither,
+a seller running two uncoordinated replicas, and an escrow operator licensed for only one of the
+two trades. Unit tests prove a type behaves; that one proves they compose.
+
 ```sh
-cargo test --workspace     # 37 tests
+cargo run -p soko-node -- demo
+```
+
+prints the same trade with its decisions, including the line that matters most: **both parties are
+identical between the two trades — only the place of supply differs, and that alone is enough for
+the escrow operator to have to refuse one of them.**
+
+```sh
+cargo test --workspace     # 39 tests
 cargo tree -p soko-seam    # must stay one line — a dep here is inherited by every implementor
 ```
 

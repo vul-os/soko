@@ -152,8 +152,11 @@ dependencies = [
  "soko-catalog",
  "soko-core",
  "soko-delivery",
+ "soko-gateway",
  "soko-jurisdiction",
+ "soko-offer",
  "soko-order",
+ "soko-seam",
  "soko-settle",
  "soko-trust",
 ]

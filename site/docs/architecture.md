@@ -44,7 +44,7 @@ keys or the object store (§12.4).
 
 ## What the tests actually pin
 
-37 tests, concentrated on the places where being wrong is silent rather than loud:
+39 tests, concentrated on the places where being wrong is silent rather than loud:
 
 - **volumetric weight** — a large light parcel priced on actual weight under-quotes, and the buyer
   finds out at the counter;
@@ -58,6 +58,11 @@ keys or the object store (§12.4).
   and a replica can be exhausted while stock remains elsewhere;
 - **reputation** — unattested reviews do not move a conservative score, and two indexes with
   different weightings legitimately disagree.
+
+Two of them are integration tests in `soko-node/tests/end_to_end.rs`, which walk one complete trade
+through every crate. That is a different kind of check: the unit tests prove each type behaves, and
+this proves they compose — which is where a design that reads fine section by section usually comes
+apart. `cargo run -p soko-node -- demo` prints the same trade in readable form.
 
 ## The public/sealed split is structural
 
