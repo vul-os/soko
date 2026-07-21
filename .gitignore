@@ -1,53 +1,8 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-# JS/TS build artifacts (unanchored — matches admin/, sdk/, etc.)
-node_modules
-dist
-dist-ssr
-*.local
-
-# Go build artifacts
-backend/bin/
-*.test
-*.out
-
-# Env / secrets
-.env
-.env.*
-!.env.example
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+/target
+**/target
+Cargo.lock.bak
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# planning / scratch docs — kept local, never tracked (purged from history)
-tasks.md
-
-# build artifacts
-*.tsbuildinfo
-
-# generated test reports
-e2e/playwright-report/
-
-# python caches
-__pycache__/
-
-# Fly scoped-login token (per-org) — never commit
-.envrc
-
-# Fly scoped-login token (per-org) — never commit
-.fly-token
+*.swp
+node_modules/
+dist/
+.env
