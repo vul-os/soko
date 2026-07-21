@@ -1,0 +1,13 @@
+[package]
+name = "soko-seam"
+description = "TRACT seams: settlement, escrow and storefront traits that name no provider. Zero dependencies, by design."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+# Intentionally empty, and CI should keep it that way: `cargo tree -p soko-seam` must stay
+# a single line. A dependency here would be inherited by every implementor of the seam.
+[dependencies]

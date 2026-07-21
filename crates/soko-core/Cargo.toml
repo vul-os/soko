@@ -1,0 +1,15 @@
+[package]
+name = "soko-core"
+description = "TRACT object model and wire format: public (signed, content-addressed) and sealed commerce objects."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-seam = { path = "../soko-seam" }
+serde.workspace = true
+ciborium.workspace = true
+thiserror.workspace = true
