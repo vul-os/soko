@@ -359,7 +359,7 @@ fn catalogue() -> Vec<Listing> {
         }),
         listing(Seed {
             name: "Bulk kraft boxes",
-            desc: "Flat-packed, 200x140x60mm.",
+            desc: "Flat-packed, 200×140×60mm.",
             attrs: &[("pack", "100")],
             availability: Availability::Count(StockSignal::InStock),
             fulfilment: Fulfilment::Ship { to: vec![ZA] },

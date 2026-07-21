@@ -250,6 +250,87 @@ impl EscrowScope {
     }
 }
 
+impl EscrowScope {
+    /// Narrow this scope by another — what the two can actually do together.
+    ///
+    /// §9.4 describes a buyer's node intersecting a gateway's declared scope with the operators
+    /// and terms it trusts. That is a different operation from [`EscrowScope::check`], which tests
+    /// one concrete trade for membership in one scope, and it had no implementation until the
+    /// conformance vectors asked for it.
+    ///
+    /// `None` means the intersection is empty in at least one dimension — there is no trade the
+    /// two would both accept, which §9.4 requires be disclosed rather than silently downgraded.
+    ///
+    /// **Every dimension narrows, and `excluded_categories` narrows by UNION rather than
+    /// intersection.** That asymmetry is the whole subtlety: exclusions are prohibitions, so
+    /// intersecting them would keep only the categories *both* parties refuse and silently permit
+    /// everything one of them refuses alone. The value ceiling takes the lower of the two for the
+    /// same reason — the more restrictive party governs.
+    pub fn intersect(&self, other: &EscrowScope) -> Option<EscrowScope> {
+        fn common<T: Copy + PartialEq>(a: &[T], b: &[T]) -> Vec<T> {
+            a.iter().filter(|x| b.contains(x)).copied().collect()
+        }
+
+        let buyer_countries = common(&self.buyer_countries, &other.buyer_countries);
+        let seller_countries = common(&self.seller_countries, &other.seller_countries);
+        let supply_countries = common(&self.supply_countries, &other.supply_countries);
+        let currencies = common(&self.currencies, &other.currencies);
+        let rail_classes = common(&self.rail_classes, &other.rail_classes);
+
+        if buyer_countries.is_empty()
+            || seller_countries.is_empty()
+            || supply_countries.is_empty()
+            || currencies.is_empty()
+            || rail_classes.is_empty()
+        {
+            return None;
+        }
+
+        // A ceiling in a currency neither side can settle is meaningless, so the lower ceiling is
+        // only comparable when the two agree on its currency. Where they disagree, the surviving
+        // currency set decides which ceiling still applies.
+        let max_order_value = if self.max_order_value.currency == other.max_order_value.currency {
+            Money {
+                minor_units: self
+                    .max_order_value
+                    .minor_units
+                    .min(other.max_order_value.minor_units),
+                currency: self.max_order_value.currency,
+            }
+        } else if currencies.contains(&self.max_order_value.currency) {
+            self.max_order_value
+        } else {
+            other.max_order_value
+        };
+
+        // UNION, not intersection — see the doc comment. Getting this backwards permits a category
+        // one party explicitly refuses.
+        let mut excluded_categories = self.excluded_categories.clone();
+        for c in &other.excluded_categories {
+            if !excluded_categories.contains(c) {
+                excluded_categories.push(c.clone());
+            }
+        }
+
+        let mut authorities = self.authorities.clone();
+        authorities.extend(other.authorities.iter().cloned());
+
+        Some(EscrowScope {
+            // The narrowed scope is still served by THIS operator; the other side is a policy, not
+            // a second custodian.
+            operator: self.operator.clone(),
+            buyer_countries,
+            seller_countries,
+            supply_countries,
+            currencies,
+            rail_classes,
+            max_order_value,
+            excluded_categories,
+            authorities,
+        })
+    }
+}
+
 /// Where funds sit in an escrowed trade.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum EscrowState {
@@ -327,6 +408,70 @@ mod tests {
             rail_class: RailClass::CustodialReversible,
             category: "books".into(),
         }
+    }
+
+    /// The operation §9.4 describes and the code did not have: a gateway's declared scope narrowed
+    /// by what the buyer will accept.
+    #[test]
+    fn intersection_narrows_every_dimension() {
+        let gateway = scope();
+        let buyer_policy = EscrowScope {
+            operator: IdentityKey(vec![0]),
+            buyer_countries: vec![ZA, DE],
+            seller_countries: vec![ZA],
+            supply_countries: vec![ZA, DE],
+            currencies: vec![ZAR, Currency(*b"EUR")],
+            rail_classes: vec![RailClass::CustodialReversible],
+            max_order_value: Money {
+                minor_units: 100_000,
+                currency: ZAR,
+            },
+            excluded_categories: vec!["weapons".into()],
+            authorities: vec![],
+        };
+        let n = gateway.intersect(&buyer_policy).expect("these overlap");
+        assert_eq!(
+            n.buyer_countries,
+            vec![ZA],
+            "only the common country survives"
+        );
+        assert_eq!(n.currencies, vec![ZAR]);
+        assert_eq!(
+            n.max_order_value.minor_units, 100_000,
+            "the LOWER ceiling governs — the more restrictive party wins"
+        );
+        assert_eq!(
+            n.operator, gateway.operator,
+            "the custodian is still the gateway"
+        );
+    }
+
+    /// The subtlety worth a test of its own. Exclusions are prohibitions, so they UNION.
+    /// Intersecting them would keep only what both parties refuse and silently permit alcohol —
+    /// which the gateway refuses — merely because the buyer had no opinion about it.
+    #[test]
+    fn exclusions_union_rather_than_intersect() {
+        let gateway = scope(); // excludes "alcohol"
+        let buyer_policy = EscrowScope {
+            excluded_categories: vec!["weapons".into()],
+            ..scope()
+        };
+        let n = gateway.intersect(&buyer_policy).unwrap();
+        assert!(n.excluded_categories.contains(&"alcohol".to_string()));
+        assert!(n.excluded_categories.contains(&"weapons".to_string()));
+        assert_eq!(n.excluded_categories.len(), 2, "both prohibitions survive");
+    }
+
+    /// No overlap in even one dimension means no trade the two would both accept — which §9.4
+    /// requires be disclosed, not silently downgraded to something weaker.
+    #[test]
+    fn empty_intersection_is_none_rather_than_a_permissive_scope() {
+        let gateway = scope();
+        let incompatible = EscrowScope {
+            buyer_countries: vec![DE],
+            ..scope()
+        };
+        assert!(gateway.intersect(&incompatible).is_none());
     }
 
     #[test]
