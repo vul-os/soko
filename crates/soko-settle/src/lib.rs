@@ -151,14 +151,18 @@ pub struct TradeContext {
 
 /// Whether escrow is available for a trade, and if not, why.
 ///
-/// The `None` variant carries a reason because "no escrow" must be shown to both parties before
-/// they commit, never silently applied.
+/// The `None` variant carries reasons — plural — because "no escrow" must be shown to both
+/// parties before they commit, never silently applied, and a buyer told only the first of several
+/// blockers has not actually been told why. A buyer informed "your country" when the currency was
+/// also wrong still has to guess at the second reason, or worse, fix the first and be surprised by
+/// the next one on retry.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EscrowAvailability {
     /// This operator can serve the trade.
     Available(IdentityKey),
-    /// No operator matched. The trade may still proceed, with disclosed risk.
-    None(ScopeMismatch),
+    /// No operator matched. The trade may still proceed, with disclosed risk. Carries every
+    /// blocking reason found, not just the first — see [`EscrowScope::check`].
+    None(Vec<ScopeMismatch>),
 }
 
 /// Why a scope did not match. Specific rather than a bare boolean, because the buyer deserves to
@@ -187,33 +191,62 @@ impl EscrowScope {
     /// Every field must match. A near-miss is a miss: an operator licensed for one region is not an
     /// option for a transaction in another, and the protocol expresses that rather than discovering
     /// it in a regulator's letter.
+    ///
+    /// Every declared field is consulted regardless of whether an earlier one already failed —
+    /// this does **not** short-circuit on the first mismatch. §9.4's posture is that a scope
+    /// mismatch is disclosed, and disclosing only the first of several simultaneous blockers is
+    /// still a silent partial downgrade: a buyer told "buyer country" who fixes that and retries
+    /// only then discovers "currency" has been true the whole time has been misled about how close
+    /// the trade was to being served.
     pub fn check(&self, t: &TradeContext) -> EscrowAvailability {
         use ScopeMismatch as M;
-        let fail = |m| EscrowAvailability::None(m);
+        let mut mismatches = Vec::new();
         if !self.buyer_countries.contains(&t.buyer_country) {
-            return fail(M::BuyerCountry);
+            mismatches.push(M::BuyerCountry);
         }
         if !self.seller_countries.contains(&t.seller_country) {
-            return fail(M::SellerCountry);
+            mismatches.push(M::SellerCountry);
         }
         if !self.supply_countries.contains(&t.supply_country) {
-            return fail(M::SupplyCountry);
+            mismatches.push(M::SupplyCountry);
         }
         if !self.currencies.contains(&t.value.currency) {
-            return fail(M::Currency);
+            mismatches.push(M::Currency);
         }
         if !self.rail_classes.contains(&t.rail_class) {
-            return fail(M::RailClass);
+            mismatches.push(M::RailClass);
         }
         if self.max_order_value.currency != t.value.currency
             || t.value.minor_units > self.max_order_value.minor_units
         {
-            return fail(M::ValueCeiling);
+            mismatches.push(M::ValueCeiling);
         }
         if self.excluded_categories.iter().any(|c| c == &t.category) {
-            return fail(M::Category);
+            mismatches.push(M::Category);
         }
-        EscrowAvailability::Available(self.operator.clone())
+        if mismatches.is_empty() {
+            EscrowAvailability::Available(self.operator.clone())
+        } else {
+            EscrowAvailability::None(mismatches)
+        }
+    }
+
+    /// Validate the scope declaration itself, independent of any trade.
+    ///
+    /// `max_order_value` is a **price** in the sense [`soko_core::Money::price`] means: a ceiling
+    /// this operator publishes, meant to be read by a buyer's interface as "escrow tops out here".
+    /// A negative ceiling is not a valid ceiling — it is malformed input that happens to still
+    /// "work" today, because [`EscrowScope::check`]'s `ValueCeiling` comparison
+    /// (`t.value.minor_units > self.max_order_value.minor_units`) is true for essentially every
+    /// real trade against a negative bound, so the scope fails closed by accident. That accidental
+    /// safety is the wrong reason for it to be safe: every trade this operator is asked about would
+    /// report a `ValueCeiling` mismatch as if it were merely too large, hiding that the scope
+    /// itself was never usable and should have been rejected before publication.
+    pub fn validate(&self) -> Result<(), soko_core::Error> {
+        if self.max_order_value.is_negative() {
+            return Err(soko_core::Error::NegativeAmount);
+        }
+        Ok(())
     }
 }
 
@@ -312,7 +345,7 @@ mod tests {
         t.buyer_country = DE;
         assert_eq!(
             scope().check(&t),
-            EscrowAvailability::None(ScopeMismatch::BuyerCountry)
+            EscrowAvailability::None(vec![ScopeMismatch::BuyerCountry])
         );
     }
 
@@ -324,7 +357,7 @@ mod tests {
         t.supply_country = DE;
         assert_eq!(
             scope().check(&t),
-            EscrowAvailability::None(ScopeMismatch::SupplyCountry)
+            EscrowAvailability::None(vec![ScopeMismatch::SupplyCountry])
         );
     }
 
@@ -334,7 +367,7 @@ mod tests {
         t.value.minor_units = 900_000;
         assert_eq!(
             scope().check(&t),
-            EscrowAvailability::None(ScopeMismatch::ValueCeiling)
+            EscrowAvailability::None(vec![ScopeMismatch::ValueCeiling])
         );
     }
 
@@ -346,7 +379,7 @@ mod tests {
         t.rail_class = RailClass::NonCustodialFinal;
         assert_eq!(
             scope().check(&t),
-            EscrowAvailability::None(ScopeMismatch::RailClass)
+            EscrowAvailability::None(vec![ScopeMismatch::RailClass])
         );
     }
 
@@ -356,18 +389,64 @@ mod tests {
         t.category = "alcohol".into();
         assert_eq!(
             scope().check(&t),
-            EscrowAvailability::None(ScopeMismatch::Category)
+            EscrowAvailability::None(vec![ScopeMismatch::Category])
         );
     }
 
     /// A currency the operator cannot settle is a mismatch even if every other field passes.
+    ///
+    /// It also, correctly, makes the value ceiling impossible to evaluate: `max_order_value` is
+    /// denominated in the operator's currency, and a trade in a currency the operator does not
+    /// even list can't be compared against it. Both are true at once and both must be reported —
+    /// this is the concrete case that motivated collecting every mismatch instead of stopping at
+    /// the first.
     #[test]
     fn wrong_currency_is_refused() {
         let mut t = trade();
         t.value.currency = Currency(*b"EUR");
         assert_eq!(
             scope().check(&t),
-            EscrowAvailability::None(ScopeMismatch::Currency)
+            EscrowAvailability::None(vec![ScopeMismatch::Currency, ScopeMismatch::ValueCeiling])
         );
+    }
+
+    /// The finding this section exists to fix: `check` used to return only the first blocking
+    /// reason it found, so a buyer told "buyer country" never learned the rail class was also
+    /// wrong. Against the OLD short-circuiting implementation this would have observed just
+    /// `[BuyerCountry]` and failed. Every simultaneous mismatch must now be reported together, in
+    /// field-declaration order, so a buyer sees the whole picture on the first try rather than
+    /// discovering blockers one retry at a time.
+    #[test]
+    fn multiple_simultaneous_mismatches_are_all_reported() {
+        let mut t = trade();
+        t.buyer_country = DE;
+        t.rail_class = RailClass::NonCustodialFinal;
+        t.category = "alcohol".into();
+        assert_eq!(
+            scope().check(&t),
+            EscrowAvailability::None(vec![
+                ScopeMismatch::BuyerCountry,
+                ScopeMismatch::RailClass,
+                ScopeMismatch::Category,
+            ])
+        );
+    }
+
+    /// A scope whose declared ceiling is negative is malformed input, not a stricter scope — see
+    /// [`EscrowScope::validate`] for why leaving it to `check`'s ordinary `ValueCeiling` path would
+    /// hide the real problem behind a misleading "too large" reading on every trade.
+    #[test]
+    fn validate_rejects_a_negative_ceiling() {
+        let mut s = scope();
+        s.max_order_value.minor_units = -1;
+        assert!(matches!(
+            s.validate(),
+            Err(soko_core::Error::NegativeAmount)
+        ));
+    }
+
+    #[test]
+    fn validate_accepts_a_well_formed_scope() {
+        assert!(scope().validate().is_ok());
     }
 }

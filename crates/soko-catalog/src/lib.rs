@@ -26,6 +26,7 @@
 
 use serde::{Deserialize, Serialize};
 use soko_core::{ContentAddress, IdentityKey};
+use unicode_normalization::UnicodeNormalization;
 
 /// How strongly a product's identity is established.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -97,12 +98,45 @@ impl soko_core::public::Publishable for ProductGroup {}
 /// Normalise a record so independent publishers have a chance of converging.
 ///
 /// This is the load-bearing operation of the whole section: the content address only deduplicates
-/// what canonicalisation manages to make identical. What it does — trim, casefold keys, sort
-/// attributes, collapse internal whitespace — is the easy part. What it cannot do is reconcile two
-/// publishers who genuinely describe a product differently, and no amount of normalisation will.
+/// what canonicalisation manages to make identical. What it does — Unicode-normalise, trim,
+/// casefold keys, sort attributes, collapse internal whitespace, resolve same-key conflicts — is
+/// the easy part. What it cannot do is reconcile two publishers who genuinely describe a product
+/// differently, and no amount of normalisation will.
+///
+/// ## Why Unicode normalisation, specifically
+///
+/// Two publishers' input methods can produce the same visible text as different byte sequences —
+/// `"é"` as one precomposed code point (U+00E9) versus `"e"` followed by a combining acute accent
+/// (U+0065 U+0301) is the canonical example, and it is common in practice: some keyboards and
+/// OSes normalise on input, some don't, and text copied between them mixes freely. Without
+/// resolving that, two publishers typing the visibly identical product name would hash to two
+/// different addresses, which defeats this function's entire stated purpose — convergence — for
+/// exactly the case (non-ASCII names, most of the world) where it matters most. NFC (Normalization
+/// Form C, the composed form) is applied before whitespace collapsing, on `name`, `description`
+/// and every attribute value.
+///
+/// ## Why a same-key conflict resolves by last-sorted-value rather than an error
+///
+/// Sorting on the whole `Attribute` struct and then removing only byte-identical adjacent entries
+/// — the previous behaviour — let two attributes that share a key but disagree on value (`colour:
+/// blue` and `colour: navy`) both survive: a canonicalised record could carry two contradictory
+/// claims about the same product with no error and no signal. That is malformed input, and the
+/// honest fix would be for this function to refuse it. It cannot: `canonicalise` returns
+/// `ProductRecord` rather than `Result`, every caller across the workspace already relies on that,
+/// and widening the signature here would ripple into crates this fix does not touch. So the
+/// conflict is instead resolved **deterministically**: attributes are sorted by `(key, value)`, so
+/// for a repeated key the last entry in that run is the lexicographically greatest value, and
+/// keeping only it is a rule that converges regardless of the input's original order — two
+/// publishers who each hit this bug independently still produce the same resolved record, rather
+/// than one that depends on which value happened to sort where by accident. It does not make the
+/// input valid; it makes the function total and its output predictable in the face of invalid
+/// input. Rejecting a self-contradictory record outright is a publish-time validator's job, not
+/// this function's.
 pub fn canonicalise(mut r: ProductRecord) -> ProductRecord {
     fn norm(s: &str) -> String {
-        s.split_whitespace()
+        s.nfc()
+            .collect::<String>()
+            .split_whitespace()
             .collect::<Vec<_>>()
             .join(" ")
             .trim()
@@ -115,7 +149,16 @@ pub fn canonicalise(mut r: ProductRecord) -> ProductRecord {
         a.value = norm(&a.value);
     }
     r.attributes.sort();
-    r.attributes.dedup();
+    // Fold same-key runs down to the last (lexicographically greatest) value. See the doc comment
+    // above for why this is last-wins rather than an error.
+    let mut deduped: Vec<Attribute> = Vec::with_capacity(r.attributes.len());
+    for a in r.attributes {
+        match deduped.last_mut() {
+            Some(prev) if prev.key == a.key => *prev = a,
+            _ => deduped.push(a),
+        }
+    }
+    r.attributes = deduped;
     r
 }
 
@@ -164,5 +207,63 @@ mod tests {
         let mut b = rec("Running Shoe", &[("colour", "navy")]);
         b.description = "a shoe".into();
         assert_ne!(a, canonicalise(b));
+    }
+
+    /// The Unicode-normalisation gap this function had: two visibly identical names built from
+    /// differently-composed code points must converge. Against the OLD implementation (ASCII
+    /// whitespace collapsing only, no NFC) `a.name` and `b.name` were different byte sequences and
+    /// this assertion failed — the exact failure mode of "two publishers describing the same shoe
+    /// never converge" that canonicalisation exists to prevent.
+    #[test]
+    fn differently_composed_unicode_converges_after_normalisation() {
+        // "café" with the é as one precomposed code point, U+00E9.
+        let precomposed = "Caf\u{00E9}";
+        // "café" with the é as "e" (U+0065) followed by a combining acute accent, U+0301.
+        let decomposed = "Cafe\u{0301}";
+        assert_ne!(
+            precomposed.as_bytes(),
+            decomposed.as_bytes(),
+            "the two source strings must actually differ at the byte level for this test to mean \
+             anything"
+        );
+        let a = canonicalise(rec(precomposed, &[]));
+        let b = canonicalise(rec(decomposed, &[]));
+        assert_eq!(
+            a, b,
+            "NFC normalisation must fold both compositions of \u{e9} to the same bytes"
+        );
+        assert_eq!(a.name, "Caf\u{00E9}");
+    }
+
+    /// Unicode normalisation must also reach attribute values, not just name/description — a
+    /// colour or size given in a differently-composed form is the same failure mode.
+    #[test]
+    fn differently_composed_unicode_converges_in_attribute_values() {
+        let a = canonicalise(rec("Beret", &[("colour", "Bordeaux \u{00E9}dition")]));
+        let b = canonicalise(rec("Beret", &[("colour", "Bordeaux e\u{0301}dition")]));
+        assert_eq!(a, b);
+    }
+
+    /// The duplicate-key finding: a record with two attributes sharing a key but disagreeing on
+    /// value must not silently keep both. Against the OLD implementation
+    /// (`attributes.sort(); attributes.dedup();`, which only collapses byte-identical
+    /// (key, value) pairs) this record kept both `colour` entries and `attributes.len()` was 2.
+    #[test]
+    fn conflicting_duplicate_attribute_keys_resolve_to_one_deterministic_value() {
+        let a = canonicalise(rec("Shoe", &[("colour", "blue"), ("colour", "navy")]));
+        assert_eq!(
+            a.attributes.len(),
+            1,
+            "a record must not carry two contradictory values for the same key"
+        );
+        // Sorted by (key, value): "blue" < "navy" lexicographically, so "navy" is the last entry
+        // in the run and wins.
+        assert_eq!(a.attributes[0].value, "navy");
+
+        // The resolution must not depend on which order the conflicting values were supplied in —
+        // that determinism is the whole point, since two publishers who each hit this bug must
+        // still converge on an identical resolved record.
+        let b = canonicalise(rec("Shoe", &[("colour", "navy"), ("colour", "blue")]));
+        assert_eq!(a, b);
     }
 }

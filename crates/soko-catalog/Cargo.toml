@@ -12,3 +12,4 @@ authors.workspace = true
 soko-core = { path = "../soko-core" }
 soko-offer = { path = "../soko-offer" }
 serde.workspace = true
+unicode-normalization.workspace = true

@@ -149,9 +149,9 @@ img{max-width:100%;display:block}
       <a class="btn btn-ghost" href="https://github.com/vul-os/soko" target="_blank" rel="noopener">View on GitHub</a>
     </div>
     <div class="hero-visual">
-      <img src="./docs/diagrams/cart-flow.png" alt="One cart across independent sellers: each publishes a signed feed, any node may index them, and the buyer's node assembles one cart and sends a sealed order to each seller" loading="lazy">
+      <img src="./docs/screenshots/storefront.png" alt="A Soko storefront rendering six listings of different shapes &mdash; a notebook, a workshop, a scaffold hire, a font licence, a made-to-measure apron and a bulk quote &mdash; all the same offer object" loading="lazy">
     </div>
-    <p style="font-size:12px;opacity:.7;margin-top:10px">No party sees the whole cart. The index holds no authority &mdash; a disagreement between an index and a seller's feed always resolves in favour of the feed.</p>
+    <p style="font-size:12px;opacity:.7;margin-top:10px">Six listings, one object model &mdash; no product type, no booking module, no rentals plugin. Rendered by <code style="font-family:var(--mono)">soko-storefront</code> from real catalogue objects. It does not yet fetch from a feed, verify a signature, or take an order.</p>
   </div></section>
 
 
@@ -207,7 +207,11 @@ cd soko &amp;&amp; cargo check --workspace
 
   <section class="section" id="diagrams"><div class="wrap">
     <h2>How it fits together</h2>
-    <p class="lead">No product screenshots yet &mdash; Soko is pre-alpha and there is no UI to photograph. These are the real architecture diagrams, regenerated from one source.</p>
+    <p class="lead">The storefront above is the one rendered surface. These describe the structure behind it, regenerated from source rather than hand-drawn.</p>
+    <div class="hero-visual" style="margin-top:0">
+      <img src="./docs/diagrams/cart-flow.png" alt="One cart across independent sellers" loading="lazy">
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:10px">Each seller publishes a signed feed; any node may index them and none is authoritative. The buyer&rsquo;s node assembles one cart and sends a separate sealed order to each seller, so <strong style="color:var(--text)">no party sees the whole cart</strong>.</p>
     <div class="hero-visual" style="margin-top:0">
       <img src="./docs/diagrams/axes.png" alt="The four axes of an offer" loading="lazy">
     </div>

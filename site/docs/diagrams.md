@@ -1,10 +1,11 @@
 # Diagrams
 
-> **There are no product screenshots here, and that is deliberate.** Soko is pre-alpha: there is no
-> UI to photograph, and a mocked-up dashboard would misrepresent how far along this is. These are
-> the real artefacts — the same mermaid sources the rest of the docs render, exported by
-> [`tools/diagrams.mjs`](https://github.com/vul-os/soko/blob/main/tools/diagrams.mjs) so they can be
-> regenerated rather than hand-maintained. Product screenshots land when there is a product.
+> **These are architecture diagrams, not product screenshots.** There is now one real rendered
+> surface — see [the storefront](#the-storefront) below and `docs/screenshots/` — but the diagrams
+> here describe structure that has no picture. Both are regenerated from source rather than
+> hand-maintained: [`tools/diagrams.mjs`](https://github.com/vul-os/soko/blob/main/tools/diagrams.mjs)
+> for these, [`tools/screenshots.mjs`](https://github.com/vul-os/soko/blob/main/tools/screenshots.mjs)
+> for the storefront, which builds the binary and photographs what it actually prints.
 
 ## One cart across sovereign sellers
 
@@ -59,10 +60,34 @@ can be evaluated exhaustively without an optimiser or a service. The unreliable 
 `wait_days`: when the slowest seller's parcel actually arrives. It is an estimate and must be shown
 as one. See [Delivery & routing](./delivery.md).
 
+## The storefront
+
+![A Soko storefront rendering six listings of different shapes](./screenshots/storefront.png)
+
+The one surface a shopper sees. Six listings — a notebook, a workshop, a scaffold hire, a font
+licence, a made-to-measure apron and a bulk quote — are the **same offer object** with different
+values on four axes. There is no product type, no booking module and no rentals plugin behind that
+page; `availability_line`, `fulfilment_line` and `price_line` each match on their own axis, so a
+haircut and a tin of beans take the same code path.
+
+Two details worth looking for. The workshop's place of supply reads **DE** while neither the seller
+nor the buyer is German — it is derived from the fulfilment axis, and a storefront that hid that
+line would be hiding the thing that decides the tax. And the notebook scores 4.8 from "2 attested"
+rather than 3 reviews, because the unattested one-star carries no weight under a conservative
+index (§10) — a different index may weight it differently, and that divergence is the design.
+
+The header says *rendered by a gateway · not verified in your browser*, which is the honest
+statement of §12's trust downgrade: a shopper without a keypair cannot check the signature and is
+trusting the renderer.
+
+**What it is not:** it does not fetch from a feed, verify a signature, or take an order. Those are
+the parts that would make it a gateway rather than a renderer, and they are not built.
+
 ## Regenerating
 
 ```sh
-node tools/diagrams.mjs     # needs Chrome; CHROME_PATH overrides
+node tools/diagrams.mjs        # architecture diagrams; needs Chrome, CHROME_PATH overrides
+node tools/screenshots.mjs     # builds soko-storefront and photographs its output
 ```
 
 Every diagram source lives in that one file, so a diagram cannot drift from a hand-edited copy of

@@ -199,12 +199,10 @@ async function load(slug){
     content.innerHTML = marked.parse(md).replace(
       /(<img[^>]+src=")\.\//g, '$1' + base
     );
-    content.querySelectorAll('img').forEach(img=>{
-      const s=img.getAttribute('src')||'';
-      if(/^https?:/i.test(s)) return;
-      const m=s.match(/(?:\.\.\/)*(?:docs\/)?screenshots\/(.+)$/);
-      if(m) img.setAttribute('src','./screenshots/'+m[1]);
-    });
+    // (A screenshot-path override lived here, inherited from the sibling product whose shell this
+    // started as. That product keeps its screenshots at the site root; this one keeps them beside
+    // the markdown that references them, so the override rewrote correct paths into 404s. The
+    // generic rebase above already handles every relative image, screenshots included.)
     // Cross-doc links (e.g. PACKS.md, ../ROADMAP.md#phase-4) become sidebar navigation.
     content.querySelectorAll('a[href]').forEach(a=>{
       const h=a.getAttribute('href')||'';

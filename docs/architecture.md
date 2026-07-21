@@ -44,7 +44,7 @@ keys or the object store (§12.4).
 
 ## What the tests actually pin
 
-48 tests, concentrated on the places where being wrong is silent rather than loud:
+57 tests, concentrated on the places where being wrong is silent rather than loud:
 
 - **volumetric weight** — a large light parcel priced on actual weight under-quotes, and the buyer
   finds out at the counter;
@@ -59,7 +59,7 @@ keys or the object store (§12.4).
 - **reputation** — unattested reviews do not move a conservative score, and two indexes with
   different weightings legitimately disagree.
 
-Nine of them exist because an adversarial review found the opposite of what this page claimed. The
+Eleven of them exist because an adversarial review found the opposite of what this page claimed. The
 project's pitch is that invariants are structural rather than remembered, and on six counts they
 were remembered:
 

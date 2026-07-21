@@ -290,7 +290,7 @@ fn a_complete_two_seller_trade_walks_through_every_crate() {
     };
     assert_eq!(
         scope.check(&event_trade),
-        EscrowAvailability::None(ScopeMismatch::SupplyCountry),
+        EscrowAvailability::None(vec![ScopeMismatch::SupplyCountry]),
         "escrow scope must fail closed on place of supply, not just on the parties' countries — \
          both parties are identical between these two trades"
     );

@@ -87,6 +87,19 @@ A decentralized design that hides its operator classes is lying about them.
 - **Nobody agrees on a star rating.** Ranking is derived, so indexes will disagree. There is no
   canonical 4.7 stars, because computing one requires the authority being removed.
 
+## A store, rendered
+
+<p align="center">
+  <img src="docs/screenshots/storefront.png" width="820" alt="A Soko storefront: six listings — a notebook, a workshop, a scaffold hire, a font licence, a made-to-measure apron and a bulk quote — all the same offer object with different axis values" />
+</p>
+<p align="center"><em>Six listings, one object model. A notebook, a workshop, a scaffold hire, a font licence, a made-to-measure apron and a bulk quote &mdash; no product type, no booking module, no rentals plugin. Note the workshop&rsquo;s place of supply is <strong>DE</strong> while neither party is German: it comes from the fulfilment axis, not from either party&rsquo;s country.</em></p>
+
+```sh
+cargo run -p soko-gateway --bin soko-storefront -- --serve 8080
+```
+
+<sub>Rendered by <code>soko-storefront</code> from real catalogue objects &mdash; the axis lines, the routing comparison and the review weighting are live calls into the workspace crates. <strong>Not yet a gateway:</strong> it does not fetch from a feed, verify a signature, or take an order. Regenerate with <code>node tools/screenshots.mjs</code>.</sub>
+
 ## Diagrams
 
 <p align="center">
@@ -104,7 +117,7 @@ A decentralized design that hides its operator classes is lying about them.
 </p>
 <p align="center"><em>Rate cards are published, so consolidation is compared locally. No quote API, and nobody learns the cart.</em></p>
 
-<sub>No product screenshots yet — Soko is pre-alpha and there is no UI to photograph. These are regenerated from one source with <code>node tools/diagrams.mjs</code>. See <a href="docs/diagrams.md">Diagrams</a>.</sub>
+<sub>Regenerated from one source with <code>node tools/diagrams.mjs</code>. See <a href="docs/diagrams.md">Diagrams</a>.</sub>
 
 ## Read the evidence before believing any of it
 
@@ -143,7 +156,7 @@ happened to do.
 | `soko-gateway` | §12 | storefront binding and the origin-isolation rule |
 | `soko-node` | — | the node binary |
 
-The whole protocol surface has a home, and **48 tests** cover the parts where getting it wrong is
+The whole protocol surface has a home, and **57 tests** cover the parts where getting it wrong is
 silent: volumetric weight, currency mismatch, escrow scope intersection, place of supply for an
 event held abroad, concurrent replicas not overselling, and unattested reviews not moving a score.
 
@@ -162,7 +175,7 @@ identical between the two trades — only the place of supply differs, and that 
 the escrow operator to have to refuse one of them.**
 
 ```sh
-cargo test --workspace     # 48 tests
+cargo test --workspace     # 57 tests
 cargo tree -p soko-seam    # must stay one line — a dep here is inherited by every implementor
 ```
 

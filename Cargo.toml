@@ -40,6 +40,7 @@ authors = ["VulOS"]
 serde = { version = "1", features = ["derive"] }
 ciborium = "0.2"
 thiserror = "2"
+unicode-normalization = "0.1"
 
 [profile.release]
 lto = "thin"
