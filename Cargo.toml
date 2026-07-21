@@ -11,6 +11,7 @@ members = [
     "crates/soko-trust",
     "crates/soko-jurisdiction",
     "crates/soko-erasure",
+    "crates/soko-feed",
     "crates/soko-gateway",
     "crates/soko-node",
 ]
@@ -39,6 +40,11 @@ authors = ["VulOS"]
 # patala-core       = { path = "../../patala/patala-core" }
 
 serde = { version = "1", features = ["derive"] }
+# Signing and content addressing. TRACT §16.2 introduces neither — these are the primitives the
+# substrate specifies (Ed25519, RFC 8032; BLAKE3), implemented here rather than invented.
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+blake3 = "1"
+rand_core = { version = "0.6", features = ["getrandom"] }
 ciborium = "0.2"
 thiserror = "2"
 unicode-normalization = "0.1"

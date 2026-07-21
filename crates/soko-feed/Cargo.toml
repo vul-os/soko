@@ -1,0 +1,18 @@
+[package]
+name = "soko-feed"
+description = "Publish a signed catalogue feed, and verify one while trusting the server for nothing."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+serde.workspace = true
+ciborium.workspace = true
+thiserror.workspace = true
+ed25519-dalek.workspace = true
+blake3.workspace = true
+rand_core.workspace = true
