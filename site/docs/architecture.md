@@ -44,7 +44,7 @@ keys or the object store (§12.4).
 
 ## What the tests actually pin
 
-57 tests, concentrated on the places where being wrong is silent rather than loud:
+104 tests, concentrated on the places where being wrong is silent rather than loud:
 
 - **volumetric weight** — a large light parcel priced on actual weight under-quotes, and the buyer
   finds out at the counter;

@@ -156,7 +156,7 @@ happened to do.
 | `soko-gateway` | §12 | storefront binding and the origin-isolation rule |
 | `soko-node` | — | the node binary |
 
-The whole protocol surface has a home, and **57 tests** cover the parts where getting it wrong is
+The whole protocol surface has a home, and **104 tests** cover the parts where getting it wrong is
 silent: volumetric weight, currency mismatch, escrow scope intersection, place of supply for an
 event held abroad, concurrent replicas not overselling, and unattested reviews not moving a score.
 
@@ -175,7 +175,7 @@ identical between the two trades — only the place of supply differs, and that 
 the escrow operator to have to refuse one of them.**
 
 ```sh
-cargo test --workspace     # 57 tests
+cargo test --workspace     # 104 tests
 cargo tree -p soko-seam    # must stay one line — a dep here is inherited by every implementor
 ```
 
