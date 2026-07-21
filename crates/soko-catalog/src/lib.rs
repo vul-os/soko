@@ -267,3 +267,105 @@ mod tests {
         assert_eq!(a, b);
     }
 }
+
+/// Property-based tests for [`canonicalise`].
+///
+/// The unit tests above are specific, hand-picked failure modes (a particular Unicode
+/// composition, a particular duplicate key). These properties instead check what has to be true
+/// of *every* input for `canonicalise` to do its job at all — no finite set of examples
+/// establishes either property, because a counterexample could hide anywhere in the input space.
+#[cfg(test)]
+mod canonicalise_proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    /// A short, printable string — long enough to exercise whitespace/case/Unicode handling,
+    /// short enough that proptest can explore thousands of them per second.
+    fn text_strategy() -> impl Strategy<Value = String> {
+        "[a-zA-Z0-9 ]{0,16}"
+    }
+
+    fn attribute_strategy() -> impl Strategy<Value = Attribute> {
+        (text_strategy(), text_strategy()).prop_map(|(key, value)| Attribute { key, value })
+    }
+
+    fn product_record_strategy() -> impl Strategy<Value = ProductRecord> {
+        (
+            text_strategy(),
+            text_strategy(),
+            prop::collection::vec(attribute_strategy(), 0..8),
+        )
+            .prop_map(|(name, description, attributes)| ProductRecord {
+                name,
+                description,
+                attributes,
+                identity: vec![],
+                group: None,
+                components: vec![],
+            })
+    }
+
+    /// A Fisher–Yates shuffle driven by a proptest-generated seed rather than by pulling from an
+    /// external `rand` crate at test time — this keeps `proptest` the only new dev-dependency and
+    /// keeps the permutation reproducible from the seed proptest already reports on shrink.
+    fn shuffled(items: &[Attribute], seed: u64) -> Vec<Attribute> {
+        let mut out = items.to_vec();
+        let mut state = seed | 1; // avoid the fixed point at 0
+        for i in (1..out.len()).rev() {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            let j = (state as usize) % (i + 1);
+            out.swap(i, j);
+        }
+        out
+    }
+
+    proptest! {
+        /// `canonicalise` must be idempotent: applying it a second time to its own output must be
+        /// a no-op. This is essential rather than a nicety — a publisher canonicalises before
+        /// publishing, but nothing stops re-canonicalisation happening again downstream (a mirror,
+        /// a re-index, a second publisher re-deriving the record from a feed). If a second pass
+        /// changed the record, its content address would change too, and two publishers who both
+        /// dutifully canonicalise would still diverge — exactly the failure this function exists
+        /// to prevent, just moved one step later.
+        #[test]
+        fn canonicalisation_is_idempotent(r in product_record_strategy()) {
+            let once = canonicalise(r);
+            let twice = canonicalise(once.clone());
+            prop_assert_eq!(once, twice);
+        }
+
+        /// `canonicalise` must be insensitive to the order attributes were supplied in: shuffling
+        /// the input attribute list must not change the output. Two sellers who describe the same
+        /// product but populate their attribute maps in different orders (a difference with no
+        /// substantive meaning) must still converge on the same address — an order-sensitive
+        /// result would fail to deduplicate for a reason that has nothing to do with the product
+        /// actually differing.
+        #[test]
+        fn canonicalisation_is_order_insensitive_for_attributes(
+            name in text_strategy(),
+            description in text_strategy(),
+            attributes in prop::collection::vec(attribute_strategy(), 0..8),
+            seed in any::<u64>(),
+        ) {
+            let base = ProductRecord {
+                name: name.clone(),
+                description: description.clone(),
+                attributes: attributes.clone(),
+                identity: vec![],
+                group: None,
+                components: vec![],
+            };
+            let reordered = ProductRecord {
+                name,
+                description,
+                attributes: shuffled(&attributes, seed),
+                identity: vec![],
+                group: None,
+                components: vec![],
+            };
+            prop_assert_eq!(canonicalise(base), canonicalise(reordered));
+        }
+    }
+}

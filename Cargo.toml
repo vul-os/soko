@@ -42,6 +42,11 @@ ciborium = "0.2"
 thiserror = "2"
 unicode-normalization = "0.1"
 
+# Dev-only. Property-based tests generate operation sequences no hand-picked case would think to
+# try. Never add this under a crate's [dependencies] — only [dev-dependencies] — or it leaks into
+# the normal dependency tree of every downstream consumer for no runtime benefit.
+proptest = "1"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

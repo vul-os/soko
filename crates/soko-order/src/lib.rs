@@ -278,13 +278,22 @@ mod tests {
         assert_eq!(seller2.1.len(), 1);
     }
 
-    /// The core safety property: two replicas selling concurrently, with no coordination, cannot
-    /// between them sell more than the stock that was partitioned to them.
+    /// Draining two replicas' quotas to exhaustion, one after the other, sums to the stock that
+    /// was partitioned to them.
+    ///
+    /// **What this does and does not prove.** This is a sequential arithmetic check, not a
+    /// concurrency test — despite the name this function used to have. Nothing here runs two
+    /// threads or interleaves operations, so it cannot demonstrate that independent replicas
+    /// *racing* one another stay within bounds. The real concurrent claim is carried by
+    /// [`concurrently_racing_independent_replicas_cannot_between_them_oversell`] and
+    /// [`transfers_conserve_total_rights_under_concurrent_contention`] below, which spawn real
+    /// OS threads. This test is kept because the plain arithmetic case is still worth asserting
+    /// on its own — it is just not evidence about concurrency.
     #[test]
-    fn independent_replicas_cannot_oversell() {
+    fn draining_two_replicas_sequentially_sums_to_issued_stock() {
         let mut a = BoundedCounter::new(key(1), 6);
         let mut b = BoundedCounter::new(key(2), 4);
-        // both sell hard, neither coordinates
+        // Sequential: A is drained fully, then B is drained fully. No interleaving occurs.
         while a.reserve(1).is_ok() {}
         while b.reserve(1).is_ok() {}
         assert_eq!(
@@ -293,6 +302,164 @@ mod tests {
             "total sold must equal total stock, never exceed it"
         );
         assert!(a.reserve(1).is_err() && b.reserve(1).is_err());
+    }
+
+    /// The core safety property, demonstrated with actual concurrency: many OS threads, each
+    /// racing to reserve against one of several independent replicas behind its own mutex, at no
+    /// point between them sell more than the stock partitioned across all replicas.
+    ///
+    /// **What this proves, and what it does not.** Rust's borrow checker already forbids two
+    /// `&mut BoundedCounter` aliasing, so a *single* counter can never be raced through this
+    /// API — that half of "thread safety" is a property of the type system, not a finding of
+    /// this test. What a test *can* show, and what hand-picked sequential cases like
+    /// [`draining_two_replicas_sequentially_sums_to_issued_stock`] cannot, is the actual claim
+    /// this crate makes: that a set of **independent** replicas, each mutated by real concurrent
+    /// threads with no coordination between replicas, cannot between them exceed the total
+    /// rights issued at construction. That is what runs below. Interleavings are not scripted —
+    /// several threads and hundreds of operations are used specifically so that a bug reachable
+    /// only under some interleavings has a real chance of surfacing, at the cost of the test
+    /// being non-deterministic in *which* interleaving occurs (never in the invariant it checks).
+    #[test]
+    fn concurrently_racing_independent_replicas_cannot_between_them_oversell() {
+        use std::sync::{Arc, Mutex};
+        use std::thread;
+
+        const REPLICAS: usize = 8;
+        const QUOTA_PER_REPLICA: u32 = 50;
+        const THREADS: usize = 16;
+        const OPS_PER_THREAD: usize = 200;
+
+        let replicas: Vec<Arc<Mutex<BoundedCounter>>> = (0..REPLICAS)
+            .map(|i| {
+                Arc::new(Mutex::new(BoundedCounter::new(
+                    key(i as u8),
+                    QUOTA_PER_REPLICA,
+                )))
+            })
+            .collect();
+        let issued: u32 = REPLICAS as u32 * QUOTA_PER_REPLICA;
+
+        let handles: Vec<_> = (0..THREADS)
+            .map(|t| {
+                let replicas = replicas.clone();
+                thread::spawn(move || {
+                    // A cheap deterministic-per-thread PRNG (splitmix64) — not for security, just
+                    // to scatter which replica each thread hammers, so threads collide on the
+                    // same mutexes instead of politely taking turns.
+                    let mut state = (t as u64 + 1).wrapping_mul(0x9E3779B97F4A7C15);
+                    for _ in 0..OPS_PER_THREAD {
+                        state = state.wrapping_add(0x9E3779B97F4A7C15);
+                        let mut z = state;
+                        z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+                        z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+                        z ^= z >> 31;
+                        let idx = (z as usize) % REPLICAS;
+                        let mut c = replicas[idx].lock().unwrap();
+                        // Ignore the Result: QuotaExhausted is an expected, correct outcome under
+                        // contention, not a test failure.
+                        let _ = c.reserve(1);
+                    }
+                })
+            })
+            .collect();
+        for h in handles {
+            h.join().unwrap();
+        }
+
+        let total_sold: u32 = replicas.iter().map(|r| r.lock().unwrap().sold()).sum();
+        let total_rights: u32 = replicas.iter().map(|r| r.lock().unwrap().rights()).sum();
+        assert!(
+            total_sold <= issued,
+            "independent replicas racing concurrently sold {total_sold}, more than the {issued} \
+             units ever issued"
+        );
+        assert_eq!(
+            total_rights, issued,
+            "concurrent reservation must conserve total rights exactly, not just bound sales"
+        );
+    }
+
+    /// Quota transfer, which mutates *two* replicas at once, conserves total rights even when
+    /// many threads are transferring and selling across a small pool of replicas concurrently —
+    /// the case most likely to expose a lock-ordering or interleaving bug, since it is the one
+    /// operation here that is not confined to a single replica's own mutex.
+    ///
+    /// Threads lock replicas in a fixed index order (lower index first) regardless of transfer
+    /// direction, which is what makes this deadlock-free: two threads transferring in opposite
+    /// directions between the same pair of replicas still acquire their locks in the same order
+    /// as each other.
+    #[test]
+    fn transfers_conserve_total_rights_under_concurrent_contention() {
+        use std::sync::{Arc, Mutex};
+        use std::thread;
+
+        const REPLICAS: usize = 6;
+        const QUOTA_PER_REPLICA: u32 = 40;
+        const THREADS: usize = 12;
+        const OPS_PER_THREAD: usize = 150;
+
+        let replicas: Vec<Arc<Mutex<BoundedCounter>>> = (0..REPLICAS)
+            .map(|i| {
+                Arc::new(Mutex::new(BoundedCounter::new(
+                    key(i as u8),
+                    QUOTA_PER_REPLICA,
+                )))
+            })
+            .collect();
+        let issued: u32 = REPLICAS as u32 * QUOTA_PER_REPLICA;
+
+        let handles: Vec<_> = (0..THREADS)
+            .map(|t| {
+                let replicas = replicas.clone();
+                thread::spawn(move || {
+                    let mut state = (t as u64 + 1).wrapping_mul(0x9E3779B97F4A7C15);
+                    let mut next = || {
+                        state = state.wrapping_add(0x9E3779B97F4A7C15);
+                        let mut z = state;
+                        z = (z ^ (z >> 30)).wrapping_mul(0xBF58476D1CE4E5B9);
+                        z = (z ^ (z >> 27)).wrapping_mul(0x94D049BB133111EB);
+                        z ^= z >> 31;
+                        z
+                    };
+                    for _ in 0..OPS_PER_THREAD {
+                        let i = (next() as usize) % REPLICAS;
+                        let mut j = (next() as usize) % REPLICAS;
+                        if j == i {
+                            j = (j + 1) % REPLICAS;
+                        }
+                        let (lo, hi) = if i < j { (i, j) } else { (j, i) };
+                        // Fixed lock order (lo before hi) regardless of transfer direction —
+                        // otherwise two threads transferring opposite ways between the same pair
+                        // could each hold one lock and wait on the other.
+                        let mut lo_guard = replicas[lo].lock().unwrap();
+                        let mut hi_guard = replicas[hi].lock().unwrap();
+                        if i < j {
+                            let _ = lo_guard.transfer_to(&mut hi_guard, 1);
+                        } else {
+                            let _ = hi_guard.transfer_to(&mut lo_guard, 1);
+                        }
+                        // Sell against both while they're held, so this test exercises transfer
+                        // and reserve racing together rather than transfer in isolation.
+                        let _ = lo_guard.reserve(1);
+                        let _ = hi_guard.reserve(1);
+                    }
+                })
+            })
+            .collect();
+        for h in handles {
+            h.join().unwrap();
+        }
+
+        let total_rights: u32 = replicas.iter().map(|r| r.lock().unwrap().rights()).sum();
+        let total_sold: u32 = replicas.iter().map(|r| r.lock().unwrap().sold()).sum();
+        assert_eq!(
+            total_rights, issued,
+            "transfers racing concurrently with sales must not create or destroy rights"
+        );
+        assert!(
+            total_sold <= issued,
+            "sold must never exceed issued even while transfer and reserve contend concurrently"
+        );
     }
 
     /// Rights are conserved by construction, not by the caller remembering to use the methods.
@@ -360,5 +527,94 @@ mod tests {
         a.reserve(3).unwrap();
         a.release(2);
         assert_eq!((a.quota(), a.sold()), (4, 1));
+    }
+}
+
+/// Property-based tests for [`BoundedCounter`].
+///
+/// The concurrency tests above cover racing threads; these cover breadth of *behaviour* —
+/// hundreds of generated operation sequences per run, rather than the handful of cases a person
+/// would think to hand-write. The invariant checked is the one this module's docs claim
+/// throughout: `sum(sold)` never exceeds what [`BoundedCounter::new`] issued, and
+/// `sum(sold) + sum(quota)` equals it exactly, after *every* operation in *every* generated
+/// sequence — not just at the end, so a sequence that violates the invariant only transiently
+/// still fails.
+#[cfg(test)]
+mod bounded_counter_proptests {
+    use super::*;
+    use proptest::prelude::*;
+
+    /// One step of a generated operation sequence against a fixed-size pool of replicas.
+    #[derive(Debug, Clone)]
+    enum Op {
+        Reserve(usize, u32),
+        Release(usize, u32),
+        Transfer(usize, usize, u32),
+    }
+
+    fn op_strategy(replica_count: usize) -> impl Strategy<Value = Op> {
+        prop_oneof![
+            (0..replica_count, 0u32..20).prop_map(|(i, n)| Op::Reserve(i, n)),
+            (0..replica_count, 0u32..20).prop_map(|(i, n)| Op::Release(i, n)),
+            (0..replica_count, 0..replica_count, 0u32..20)
+                .prop_map(|(i, j, n)| Op::Transfer(i, j, n)),
+        ]
+    }
+
+    proptest! {
+        /// For any sequence of reserve/release/transfer operations across any set of replicas:
+        /// `sum(sold) + sum(quota) == total issued` always, and `sum(sold)` never exceeds it.
+        /// Every generated `Reserve`/`Transfer` amount can legitimately fail with
+        /// `QuotaExhausted` — that is expected and ignored, exactly as a real caller would; the
+        /// property under test is that the invariant survives regardless of which operations
+        /// succeed.
+        #[test]
+        fn rights_conserved_and_never_oversold_for_any_operation_sequence(
+            (quotas, ops) in prop::collection::vec(0u32..50, 2..6).prop_flat_map(|quotas| {
+                let n = quotas.len();
+                prop::collection::vec(op_strategy(n), 0..150)
+                    .prop_map(move |ops| (quotas.clone(), ops))
+            })
+        ) {
+            let mut replicas: Vec<BoundedCounter> = quotas
+                .iter()
+                .enumerate()
+                .map(|(i, &q)| BoundedCounter::new(IdentityKey(vec![i as u8]), q))
+                .collect();
+            let issued: u32 = quotas.iter().sum();
+
+            for op in ops {
+                match op {
+                    Op::Reserve(i, n) => {
+                        let _ = replicas[i].reserve(n);
+                    }
+                    Op::Release(i, n) => {
+                        replicas[i].release(n);
+                    }
+                    Op::Transfer(i, j, n) => {
+                        if i != j {
+                            // Two live mutable borrows into the same Vec: split around whichever
+                            // index is greater, exactly as the concurrency tests above split
+                            // around a lock ordering rather than an index.
+                            let (a, b) = if i < j {
+                                let (left, right) = replicas.split_at_mut(j);
+                                (&mut left[i], &mut right[0])
+                            } else {
+                                let (left, right) = replicas.split_at_mut(i);
+                                (&mut right[0], &mut left[j])
+                            };
+                            let _ = a.transfer_to(b, n);
+                        }
+                    }
+                }
+
+                let total_sold: u32 = replicas.iter().map(BoundedCounter::sold).sum();
+                let total_rights: u32 = replicas.iter().map(BoundedCounter::rights).sum();
+                // proptest reports the failing `quotas`/`ops` input itself (shrunk) on failure,
+                // so the messages here only need to state which invariant broke.
+                prop_assert_eq!(total_rights, issued, "rights not conserved mid-sequence");
+                prop_assert!(total_sold <= issued, "sold {} exceeded issued {}", total_sold, issued);
+            }
+        }
     }
 }

@@ -13,3 +13,6 @@ soko-core = { path = "../soko-core" }
 soko-offer = { path = "../soko-offer" }
 serde.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
