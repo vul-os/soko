@@ -10,6 +10,7 @@ members = [
     "crates/soko-settle",
     "crates/soko-trust",
     "crates/soko-jurisdiction",
+    "crates/soko-erasure",
     "crates/soko-gateway",
     "crates/soko-node",
 ]

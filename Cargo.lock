@@ -370,6 +370,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "soko-erasure"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "soko-core",
+ "thiserror",
+]
+
+[[package]]
 name = "soko-gateway"
 version = "0.1.0"
 dependencies = [

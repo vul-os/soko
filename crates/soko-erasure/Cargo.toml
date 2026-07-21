@@ -1,0 +1,14 @@
+[package]
+name = "soko-erasure"
+description = "Data-subject rights: access, erasure, retention bases, and tombstones for the irrevocable quadrant."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[dependencies]
+soko-core = { path = "../soko-core" }
+serde.workspace = true
+thiserror.workspace = true
