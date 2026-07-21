@@ -42,6 +42,14 @@ parties' countries tells you nothing useful; only the Fulfilment object knows th
 By fulfilment mode: `ship` → destination; `perform-at-place` → the venue; `perform-remote` and
 `digital grant` → buyer residence; rentals → collection point.
 
+**The anchor is read out of the fulfilment object, never passed in beside it.** That sounds like an
+API detail and is actually the whole guarantee: a resolver that accepts a place as an argument next
+to a fulfilment that already carries one will return whatever it is handed, so a German event
+resolves to South Africa on request — confidently, plausibly, wrongly. That is the exact error the
+four anchors exist to make unrepresentable, and it was representable until the argument was
+removed. Where a party has a genuine choice — which country a shipped order goes to — the choice is
+checked against the territories the offer actually serves rather than trusted.
+
 ## What the regimes demand structurally
 
 | Jurisdiction | Bites on | Structural implication |
