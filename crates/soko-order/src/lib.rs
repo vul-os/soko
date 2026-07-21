@@ -96,14 +96,19 @@ impl Cart {
 }
 
 /// Per-replica stock quota, so replicas sell without coordinating.
+///
+/// **The fields are private on purpose.** The invariant this type exists for — total sales never
+/// exceed the stock that was partitioned — is only true if `quota + sold` is conserved, and public
+/// fields would make every method optional: `counter.quota = u32::MAX` would conjure stock from
+/// nothing without a single call. An invariant a caller has to remember to respect is not an
+/// invariant, and this project's claim is that its invariants are structural.
+///
+/// Construct with [`BoundedCounter::new`], which is the only way rights enter the system.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct BoundedCounter {
-    /// This replica.
-    pub replica: IdentityKey,
-    /// Units this replica may still sell on its own authority.
-    pub quota: u32,
-    /// Units it has sold.
-    pub sold: u32,
+    replica: IdentityKey,
+    quota: u32,
+    sold: u32,
 }
 
 /// Why a reservation failed.
@@ -113,9 +118,46 @@ pub enum ReserveError {
     /// to acquire quota from another replica before telling a buyer it is out of stock.
     #[error("local quota exhausted; other replicas may still hold stock")]
     QuotaExhausted,
+    /// A transfer named the same replica as source and destination, which would duplicate rights
+    /// rather than move them.
+    #[error("cannot transfer rights to the same replica")]
+    SameReplica,
 }
 
 impl BoundedCounter {
+    /// Partition `quota` units of rights to `replica`.
+    ///
+    /// This is the only way rights are created. Everything else moves or spends them, so the sum
+    /// across every replica is whatever was issued here and never more.
+    pub fn new(replica: IdentityKey, quota: u32) -> Self {
+        Self {
+            replica,
+            quota,
+            sold: 0,
+        }
+    }
+
+    /// Which replica holds these rights.
+    pub fn replica(&self) -> &IdentityKey {
+        &self.replica
+    }
+
+    /// Units this replica may still sell on its own authority.
+    pub fn quota(&self) -> u32 {
+        self.quota
+    }
+
+    /// Units this replica has sold.
+    pub fn sold(&self) -> u32 {
+        self.sold
+    }
+
+    /// Rights held by this replica, spent or not. Conserved across every operation on this type,
+    /// which is the property the private fields exist to protect.
+    pub fn rights(&self) -> u32 {
+        self.quota + self.sold
+    }
+
     /// Take `n` units from this replica's quota, or fail.
     ///
     /// Never coordinates and never blocks. Failure means *this replica* cannot serve the sale, not
@@ -130,14 +172,21 @@ impl BoundedCounter {
         Ok(())
     }
 
-    /// Move quota to another replica. Conserves total quota by construction.
+    /// Move quota to another replica. Conserves total rights by construction.
     ///
     /// The signature takes the recipient deliberately. At three or more replicas a transfer is not
     /// anonymous — somebody has to decide who receives the quota — and taking `&mut other` makes
     /// that allocation decision visible at the call site instead of hiding it behind a pool. There
     /// is no `release_into_pool` counterpart, because a pool would need an allocator, and an
     /// allocator is the coordinator this design is trying not to require.
+    ///
+    /// Transferring to a replica with the same identity is refused: it would appear to conserve
+    /// rights while actually duplicating them across two counters that both believe they hold the
+    /// quota.
     pub fn transfer_to(&mut self, other: &mut BoundedCounter, n: u32) -> Result<(), ReserveError> {
+        if other.replica == self.replica {
+            return Err(ReserveError::SameReplica);
+        }
         if n > self.quota {
             return Err(ReserveError::QuotaExhausted);
         }
@@ -233,63 +282,73 @@ mod tests {
     /// between them sell more than the stock that was partitioned to them.
     #[test]
     fn independent_replicas_cannot_oversell() {
-        let mut a = BoundedCounter {
-            replica: key(1),
-            quota: 6,
-            sold: 0,
-        };
-        let mut b = BoundedCounter {
-            replica: key(2),
-            quota: 4,
-            sold: 0,
-        };
+        let mut a = BoundedCounter::new(key(1), 6);
+        let mut b = BoundedCounter::new(key(2), 4);
         // both sell hard, neither coordinates
         while a.reserve(1).is_ok() {}
         while b.reserve(1).is_ok() {}
         assert_eq!(
-            a.sold + b.sold,
+            a.sold() + b.sold(),
             10,
             "total sold must equal total stock, never exceed it"
         );
         assert!(a.reserve(1).is_err() && b.reserve(1).is_err());
     }
 
+    /// Rights are conserved by construction, not by the caller remembering to use the methods.
+    /// The fields are private precisely so this holds without cooperation — before that, a plain
+    /// `counter.quota = u32::MAX` conjured stock from nothing with no call at all.
+    #[test]
+    fn rights_are_conserved_across_every_operation() {
+        let mut a = BoundedCounter::new(key(1), 6);
+        let mut b = BoundedCounter::new(key(2), 4);
+        let issued = a.rights() + b.rights();
+        a.reserve(3).unwrap();
+        a.transfer_to(&mut b, 2).unwrap();
+        b.reserve(5).unwrap();
+        b.release(2);
+        assert_eq!(
+            a.rights() + b.rights(),
+            issued,
+            "no operation creates or destroys rights"
+        );
+        assert_eq!(issued, 10);
+    }
+
+    /// Transferring to yourself would look like conservation while actually duplicating rights
+    /// across two counters that each believe they hold the quota.
+    #[test]
+    fn transfer_to_the_same_replica_is_refused() {
+        let mut a = BoundedCounter::new(key(1), 5);
+        let mut impostor = BoundedCounter::new(key(1), 0);
+        assert_eq!(
+            a.transfer_to(&mut impostor, 5),
+            Err(ReserveError::SameReplica)
+        );
+        assert_eq!(a.quota(), 5, "the refused transfer moved nothing");
+    }
+
     /// Quota transfer conserves the total — the mechanism that lets a busy replica keep selling
     /// without a coordinator.
     #[test]
     fn quota_transfer_conserves_total() {
-        let mut a = BoundedCounter {
-            replica: key(1),
-            quota: 6,
-            sold: 0,
-        };
-        let mut b = BoundedCounter {
-            replica: key(2),
-            quota: 4,
-            sold: 0,
-        };
+        let mut a = BoundedCounter::new(key(1), 6);
+        let mut b = BoundedCounter::new(key(2), 4);
         a.transfer_to(&mut b, 5).unwrap();
-        assert_eq!(a.quota + b.quota, 10);
-        assert_eq!((a.quota, b.quota), (1, 9));
+        assert_eq!(a.quota() + b.quota(), 10);
+        assert_eq!((a.quota(), b.quota()), (1, 9));
     }
 
     /// The honest cost, asserted: a replica can report exhausted while stock still exists
     /// elsewhere. If this replica is partitioned, that stock is stranded until it rejoins.
     #[test]
     fn a_replica_can_be_exhausted_while_stock_remains_elsewhere() {
-        let mut a = BoundedCounter {
-            replica: key(1),
-            quota: 0,
-            sold: 6,
-        };
-        let b = BoundedCounter {
-            replica: key(2),
-            quota: 4,
-            sold: 0,
-        };
+        let mut a = BoundedCounter::new(key(1), 6);
+        let b = BoundedCounter::new(key(2), 4);
+        while a.reserve(1).is_ok() {}
         assert_eq!(a.reserve(1), Err(ReserveError::QuotaExhausted));
         assert!(
-            b.quota > 0,
+            b.quota() > 0,
             "stock exists, but replica A cannot sell it without a transfer"
         );
     }
@@ -297,13 +356,9 @@ mod tests {
     /// Releasing an unsold reservation returns it to quota rather than losing it.
     #[test]
     fn release_returns_quota() {
-        let mut a = BoundedCounter {
-            replica: key(1),
-            quota: 5,
-            sold: 0,
-        };
+        let mut a = BoundedCounter::new(key(1), 5);
         a.reserve(3).unwrap();
         a.release(2);
-        assert_eq!((a.quota, a.sold), (4, 1));
+        assert_eq!((a.quota(), a.sold()), (4, 1));
     }
 }

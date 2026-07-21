@@ -44,12 +44,24 @@ pub enum StoreHost {
 }
 
 impl StoreHost {
-    /// The web origin this store is served from.
+    /// The web origin this store is served from, **normalised** the way DNS and browsers compare
+    /// hosts: ASCII-lowercased, with any trailing root dot removed.
+    ///
+    /// Comparing raw strings was a real hole rather than a cosmetic one. `alice.example` and
+    /// `Alice.example` are the same origin to a browser — same storage partition, same cart, same
+    /// session — so an un-normalised comparison reported two stores as isolated while one
+    /// merchant's untrusted bundle could read the other's data. §12.3 calls that non-conformant.
+    ///
+    /// Not handled here: IDN/punycode variants of the same name. A gateway accepting
+    /// internationalised labels needs an IDNA pass before this point, and that is stated rather
+    /// than silently assumed away.
     pub fn origin(&self) -> String {
-        match self {
-            StoreHost::Subdomain { label, base } => format!("https://{label}.{base}"),
-            StoreHost::Custom(d) => format!("https://{d}"),
-        }
+        let host = match self {
+            StoreHost::Subdomain { label, base } => format!("{label}.{base}"),
+            StoreHost::Custom(d) => d.clone(),
+        };
+        let host = host.trim_end_matches('.').to_ascii_lowercase();
+        format!("https://{host}")
     }
 }
 
@@ -114,6 +126,45 @@ mod tests {
         let b = StoreBinding {
             seller: IdentityKey(vec![2]),
             host: StoreHost::Custom("shop.example".into()),
+        };
+        assert!(!a.origin_isolated_from(&b));
+    }
+
+    /// Origins are case-insensitive in DNS and in browsers. Before normalisation this pair
+    /// reported as isolated while sharing one real storage partition — one merchant's bundle
+    /// could read the other's cart.
+    #[test]
+    fn case_differences_do_not_create_a_second_origin() {
+        let a = StoreBinding {
+            seller: IdentityKey(vec![1]),
+            host: StoreHost::Subdomain {
+                label: "alice".into(),
+                base: "soko.example".into(),
+            },
+        };
+        let b = StoreBinding {
+            seller: IdentityKey(vec![2]),
+            host: StoreHost::Subdomain {
+                label: "Alice".into(),
+                base: "Soko.Example".into(),
+            },
+        };
+        assert!(
+            !a.origin_isolated_from(&b),
+            "same host, different case, is the SAME origin"
+        );
+    }
+
+    /// A trailing root dot is the same host to a resolver, so it must not mint a second origin.
+    #[test]
+    fn trailing_root_dot_does_not_create_a_second_origin() {
+        let a = StoreBinding {
+            seller: IdentityKey(vec![1]),
+            host: StoreHost::Custom("shop.example".into()),
+        };
+        let b = StoreBinding {
+            seller: IdentityKey(vec![2]),
+            host: StoreHost::Custom("shop.example.".into()),
         };
         assert!(!a.origin_isolated_from(&b));
     }

@@ -143,6 +143,7 @@ dependencies = [
  "serde",
  "soko-core",
  "soko-offer",
+ "thiserror",
 ]
 
 [[package]]

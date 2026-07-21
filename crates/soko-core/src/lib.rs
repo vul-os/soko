@@ -66,10 +66,18 @@ pub struct Money {
 /// Nothing in this module tree may carry personal data (§0.5.1). If a type here grows a name, an
 /// address, or a contact detail, that is the bug the module split exists to make visible.
 pub mod public {
-    /// A marker for objects that are safe to publish.
+    /// A marker for objects intended to be published.
     ///
-    /// Implemented only by types that carry no personal data. It is a discipline, not a proof —
-    /// but a type that has to opt in is one a reviewer will notice.
+    /// **This is a review aid, not an enforcement mechanism, and it is worth being exact about
+    /// which.** The trait is not used as a bound anywhere, so implementing it proves nothing about
+    /// a type's contents; what it does is make "this is going into the irrevocable quadrant" an
+    /// explicit line a reviewer sees in a diff. Two `Publishable` types
+    /// (`soko_offer::PlaceRef`, `soko_trust::Review`) still carry free-text fields a user could
+    /// type an address into, and no trait can prevent that — §10.4 and the client requirements
+    /// have to.
+    ///
+    /// The real structural defence is the grammar (TRACT §16.4): there is no street-address
+    /// production in the public family at all, so adding one is a spec change rather than a field.
     pub trait Publishable {}
 }
 
@@ -92,4 +100,9 @@ pub enum Error {
     /// A currency mismatch in an arithmetic operation. Never silently coerced.
     #[error("currency mismatch")]
     CurrencyMismatch,
+    /// An arithmetic operation would overflow. Refused rather than wrapped: a wrapped total is a
+    /// wrong number that looks like a real one, and it would be carried into a signed order where
+    /// no later correction can reach it.
+    #[error("arithmetic overflow")]
+    Overflow,
 }

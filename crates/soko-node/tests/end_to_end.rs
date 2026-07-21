@@ -142,21 +142,16 @@ fn a_complete_two_seller_trade_walks_through_every_crate() {
     }
 
     // ---- 4. Jurisdiction: place of supply differs per line, from the fulfilment axis -----------
-    let goods_supply = place_of_supply(&goods.fulfilment, NZ, Some(NZ), None);
-    let event_supply = place_of_supply(
-        &event.fulfilment,
-        NZ,
-        None,
-        Some(DE), // the venue
-    );
+    let goods_supply = place_of_supply(&goods.fulfilment, NZ, Some(NZ)).unwrap();
+    // No venue argument: the event's place is read out of the offer itself, so nothing a caller
+    // passes can move a German event somewhere more convenient.
+    let event_supply = place_of_supply(&event.fulfilment, NZ, None).unwrap();
     assert_eq!(
-        goods_supply,
-        Some(NZ),
+        goods_supply, NZ,
         "shipped goods are supplied at the destination"
     );
     assert_eq!(
-        event_supply,
-        Some(DE),
+        event_supply, DE,
         "the event is supplied in Germany though neither party is German — \
          the whole reason there are four anchors and not two"
     );
@@ -188,28 +183,20 @@ fn a_complete_two_seller_trade_walks_through_every_crate() {
     assert!(with_rep.may_offer_into(DE, &event.sell_to, true).is_ok());
 
     // ---- 6. Inventory: the goods seller runs two replicas that never coordinate ----------------
-    let mut counter_shop = BoundedCounter {
-        replica: key(11),
-        quota: 6,
-        sold: 0,
-    };
-    let mut counter_warehouse = BoundedCounter {
-        replica: key(12),
-        quota: 4,
-        sold: 0,
-    };
+    let mut counter_shop = BoundedCounter::new(key(11), 6);
+    let mut counter_warehouse = BoundedCounter::new(key(12), 4);
     counter_shop
         .reserve(2)
         .expect("the cart's 2 units come from the shop replica's own quota");
     // the warehouse sells hard at the same moment, with no knowledge of the shop
     while counter_warehouse.reserve(1).is_ok() {}
     assert_eq!(
-        counter_shop.sold + counter_warehouse.sold + counter_shop.quota + counter_warehouse.quota,
+        counter_shop.rights() + counter_warehouse.rights(),
         10,
         "rights are conserved: sold + remaining always equals the stock that was partitioned"
     );
     assert!(
-        counter_shop.sold + counter_warehouse.sold <= 10,
+        counter_shop.sold() + counter_warehouse.sold() <= 10,
         "no oversell, with no coordinator between the replicas"
     );
 
@@ -284,7 +271,7 @@ fn a_complete_two_seller_trade_walks_through_every_crate() {
     let goods_trade = TradeContext {
         buyer_country: NZ,
         seller_country: ZA,
-        supply_country: goods_supply.unwrap(),
+        supply_country: goods_supply,
         value: zar(90_000),
         rail_class: RailClass::CustodialReversible,
         category: "stationery".into(),
@@ -296,7 +283,7 @@ fn a_complete_two_seller_trade_walks_through_every_crate() {
 
     // the SAME operator must refuse the event line — only the place of supply differs
     let event_trade = TradeContext {
-        supply_country: event_supply.unwrap(),
+        supply_country: event_supply,
         value: zar(30_000),
         category: "events".into(),
         ..goods_trade.clone()

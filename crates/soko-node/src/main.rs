@@ -116,40 +116,34 @@ fn main() {
 
     // Place of supply comes from the fulfilment axis, not from either party's country.
     println!("PLACE OF SUPPLY — derived per line, from fulfilment");
-    let g = place_of_supply(&goods.fulfilment, NZ, Some(NZ), None);
-    let e = place_of_supply(&event.fulfilment, NZ, None, Some(DE));
-    println!("  shipped good   -> {}  (the destination)", cc(g.unwrap()));
+    let g = place_of_supply(&goods.fulfilment, NZ, Some(NZ)).unwrap();
+    let e = place_of_supply(&event.fulfilment, NZ, None).unwrap();
+    println!("  shipped good   -> {}  (the destination)", cc(g));
     println!(
         "  event ticket   -> {}  (the venue — neither party is there)",
-        cc(e.unwrap())
+        cc(e)
     );
     println!("  two lines, one cart, different tax anchors\n");
 
     // Two replicas of the goods seller, selling at the same moment with no coordination.
     println!("INVENTORY — two replicas, no coordinator");
-    let mut shop = BoundedCounter {
-        replica: IdentityKey(vec![11]),
-        quota: 6,
-        sold: 0,
-    };
-    let mut warehouse = BoundedCounter {
-        replica: IdentityKey(vec![12]),
-        quota: 4,
-        sold: 0,
-    };
+    let mut shop = BoundedCounter::new(IdentityKey(vec![11]), 6);
+    let mut warehouse = BoundedCounter::new(IdentityKey(vec![12]), 4);
     shop.reserve(2).ok();
     while warehouse.reserve(1).is_ok() {}
     println!(
         "  shop      sold {}, {} left in its own quota",
-        shop.sold, shop.quota
+        shop.sold(),
+        shop.quota()
     );
     println!(
         "  warehouse sold {}, {} left in its own quota",
-        warehouse.sold, warehouse.quota
+        warehouse.sold(),
+        warehouse.quota()
     );
     println!(
         "  total sold {} of 10 — no oversell, and neither replica asked the other\n",
-        shop.sold + warehouse.sold
+        shop.sold() + warehouse.sold()
     );
 
     // Routing compared locally from published rate cards.
@@ -208,13 +202,13 @@ fn main() {
     let base = TradeContext {
         buyer_country: NZ,
         seller_country: ZA,
-        supply_country: g.unwrap(),
+        supply_country: g,
         value: zar(90_000),
         rail_class: RailClass::CustodialReversible,
         category: "stationery".into(),
     };
     let evt = TradeContext {
-        supply_country: e.unwrap(),
+        supply_country: e,
         category: "events".into(),
         ..base.clone()
     };

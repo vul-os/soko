@@ -61,6 +61,23 @@ pub struct RateCard {
 
 impl soko_core::public::Publishable for RateCard {}
 
+/// The smallest volumetric divisor any real carrier publishes is in the thousands (5000 and 6000
+/// are the common ones). A tiny divisor makes volumetric weight enormous, so a card carrying one
+/// is either a mistake or an attempt to inflate every quote computed from it.
+pub const MIN_DIM_DIVISOR: u32 = 1_000;
+
+impl RateCard {
+    /// Whether this card is safe to compute prices from.
+    ///
+    /// A card is a **claim by its publisher** (§8.4) and arrives from a stranger, so it is checked
+    /// before use rather than trusted. `dim_divisor == 0` is permitted and means "this carrier does
+    /// not apply volumetric weight"; anything between 1 and [`MIN_DIM_DIVISOR`] is rejected,
+    /// because it is not a divisor any carrier uses and it inflates every parcel it touches.
+    pub fn is_usable(&self) -> bool {
+        self.dim_divisor == 0 || self.dim_divisor >= MIN_DIM_DIVISOR
+    }
+}
+
 /// One price band within a rate card.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Zone {
@@ -104,9 +121,15 @@ impl Parcel {
         if dim_divisor == 0 {
             return self.weight_grams;
         }
-        let volumetric = (self.length_mm as u64 * self.width_mm as u64 * self.height_mm as u64)
-            / (dim_divisor as u64);
-        self.weight_grams.max(volumetric as u32)
+        let volumetric =
+            (u64::from(self.length_mm) * u64::from(self.width_mm) * u64::from(self.height_mm))
+                / u64::from(dim_divisor);
+        // Saturate rather than truncate. An `as u32` here wrapped: a 1700mm cube with a divisor of
+        // 1 reported about an eighth of its real volumetric weight, which is the under-quote this
+        // function's whole purpose is to prevent. A saturated value is absurd and visible; a
+        // wrapped one is plausible and silent.
+        let volumetric = u32::try_from(volumetric).unwrap_or(u32::MAX);
+        self.weight_grams.max(volumetric)
     }
 }
 
@@ -211,7 +234,14 @@ impl RouteOption {
             if leg.cost.currency != sum.currency {
                 return Err(soko_core::Error::CurrencyMismatch);
             }
-            sum.minor_units += leg.cost.minor_units;
+            // Checked, not wrapping. Release builds do not enable overflow checks, so `+=` here
+            // silently produced a large negative total once the sum passed i64::MAX — and that
+            // total would have gone straight into a signed order, where nothing downstream can
+            // correct it. The currency guard above was already refusing the *less* dangerous case.
+            sum.minor_units = sum
+                .minor_units
+                .checked_add(leg.cost.minor_units)
+                .ok_or(soko_core::Error::Overflow)?;
         }
         Ok(sum)
     }
@@ -254,6 +284,44 @@ mod tests {
         assert_eq!(p.billable_grams(5000), 5_000);
     }
 
+    /// A truncating cast made a huge parcel look light: 1700mm cubed with a divisor of 1 reported
+    /// roughly an eighth of its real volumetric weight. Saturating is absurd and visible; wrapping
+    /// was plausible and silent, which is the failure mode this function exists to prevent.
+    #[test]
+    fn oversized_volumetric_saturates_rather_than_wrapping() {
+        let p = Parcel {
+            length_mm: 1700,
+            width_mm: 1700,
+            height_mm: 1700,
+            weight_grams: 1_000,
+        };
+        assert_eq!(p.billable_grams(1), u32::MAX);
+    }
+
+    /// A card with an absurd divisor is refused before it can inflate a quote.
+    #[test]
+    fn rate_cards_with_implausible_divisors_are_rejected() {
+        let card = |d| RateCard {
+            carrier: IdentityKey(vec![1]),
+            serves: vec![],
+            zones: vec![],
+            dim_divisor: d,
+            surcharge_pct: 0,
+            excluded_categories: vec![],
+            published: soko_core::Timestamp(0),
+        };
+        assert!(card(5000).is_usable(), "the common real-world divisor");
+        assert!(
+            card(0).is_usable(),
+            "zero means this carrier does not apply volumetric weight"
+        );
+        assert!(
+            !card(1).is_usable(),
+            "no carrier uses 1; it inflates every parcel"
+        );
+        assert!(!card(999).is_usable());
+    }
+
     /// A zero divisor must not divide by zero; it means "this carrier does not apply volumetric".
     #[test]
     fn zero_divisor_falls_back_to_actual_weight() {
@@ -281,6 +349,29 @@ mod tests {
             hub_fees: money(1_800),
         };
         assert_eq!(r.total().unwrap().minor_units, 9_500);
+    }
+
+    /// A total that overflows must refuse, not wrap. Release builds have overflow checks off, so
+    /// this wrapped to a large negative number before — a wrong total that looks like a real one,
+    /// carried into a signed order where nothing downstream can fix it.
+    #[test]
+    fn overflowing_total_refuses_rather_than_wrapping() {
+        let leg = |c| Leg {
+            carrier: IdentityKey(vec![1]),
+            source: RateSource::LiveQuoteRequired,
+            cost: Money {
+                minor_units: c,
+                currency: ZAR,
+            },
+            transit_days: 1,
+        };
+        let r = RouteOption {
+            shape: RouteShape::Direct,
+            legs: vec![leg(i64::MAX - 100), leg(200)],
+            wait_days: 0,
+            hub_fees: money(0),
+        };
+        assert!(matches!(r.total(), Err(soko_core::Error::Overflow)));
     }
 
     /// Mixed currencies must fail loudly. A silently converted total is a wrong total that looks

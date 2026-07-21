@@ -44,7 +44,7 @@ keys or the object store (§12.4).
 
 ## What the tests actually pin
 
-39 tests, concentrated on the places where being wrong is silent rather than loud:
+48 tests, concentrated on the places where being wrong is silent rather than loud:
 
 - **volumetric weight** — a large light parcel priced on actual weight under-quotes, and the buyer
   finds out at the counter;
@@ -59,8 +59,24 @@ keys or the object store (§12.4).
 - **reputation** — unattested reviews do not move a conservative score, and two indexes with
   different weightings legitimately disagree.
 
-Two of them are integration tests in `soko-node/tests/end_to_end.rs`, which walk one complete trade
-through every crate. That is a different kind of check: the unit tests prove each type behaves, and
+Nine of them exist because an adversarial review found the opposite of what this page claimed. The
+project's pitch is that invariants are structural rather than remembered, and on six counts they
+were remembered:
+
+| Was | Now |
+|---|---|
+| `BoundedCounter`'s fields were `pub`, so `counter.quota = u32::MAX` conjured stock with no method call at all | fields private, `new()` is the only way rights enter the system, `rights()` exposes the conserved quantity |
+| `place_of_supply` took the venue as a parameter alongside the fulfilment, so a caller could pass a country that disagreed and get a confident wrong answer | the venue is read out of the `Fulfilment` itself; no argument can contradict it |
+| `origin_isolated_from` compared raw strings, reporting `alice.example` and `Alice.example` as isolated when a browser treats them as one origin | hosts are lowercased and root-dot-stripped before comparison |
+| `RouteOption::total` used `+=` on `i64` — release builds have overflow checks off, so it wrapped to a large negative total | `checked_add`, returning `Error::Overflow` |
+| `billable_grams` cast `u64` to `u32`, reporting a 1700mm cube at an eighth of its real weight | saturates instead of wrapping, and `RateCard::is_usable` rejects implausible divisors |
+| `Publishable`/`Sealed` were described as type-level separation but appear only as empty `impl`s | documented as what they are — a review aid; the real defence is the grammar (TRACT §16.4) |
+
+That last row is the honest one: a marker trait with no bound proves nothing about a type's
+contents, and two `Publishable` types still carry free text a user could type an address into.
+
+Two further tests are integration tests in `soko-node/tests/end_to_end.rs`, which walk one complete
+trade through every crate. That is a different kind of check: the unit tests prove each type behaves, and
 this proves they compose — which is where a design that reads fine section by section usually comes
 apart. `cargo run -p soko-node -- demo` prints the same trade in readable form.
 

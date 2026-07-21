@@ -30,7 +30,7 @@
 
 use serde::{Deserialize, Serialize};
 use soko_core::{Country, IdentityKey};
-use soko_offer::{Fulfilment, PlaceOfSupplyKind};
+use soko_offer::Fulfilment;
 
 /// The four jurisdictional anchors of one trade.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -45,21 +45,55 @@ pub struct Anchors {
     pub delivery_destination: Option<Country>,
 }
 
-/// Resolve place of supply from the fulfilment axis and the parties.
+/// Why a place of supply could not be resolved.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+pub enum SupplyError {
+    /// A shipped offer needs a chosen destination and none was supplied.
+    #[error("shipped fulfilment requires a delivery destination")]
+    NoDestination,
+    /// The chosen destination is not one the offer ships to. Resolving anyway would compute tax
+    /// for a delivery the seller never agreed to make.
+    #[error("delivery destination is not among the territories this offer ships to")]
+    DestinationNotOffered,
+}
+
+/// Resolve place of supply from the fulfilment axis.
 ///
-/// `stated_place` is the venue or collection point, when the fulfilment mode names one. Returns
-/// `None` when the mode requires a stated place and none was supplied — a missing venue is a
-/// malformed offer, not something to guess at by falling back to a party's country.
+/// **The venue is read out of the [`Fulfilment`] itself, never accepted as a separate argument.**
+/// An earlier signature took a `stated_place: Option<Country>` alongside the fulfilment, which
+/// meant a caller could hand it `PerformAtPlace { at: Berlin }` together with `Some(ZA)` and get
+/// back a confident, plausible, wrong `ZA`. That is precisely the error §11.2 claims the four
+/// anchors make *not expressible* — and it was expressible, because nothing forced the argument to
+/// agree with the object. Deriving it here makes the mismatch unrepresentable rather than merely
+/// discouraged.
+///
+/// `delivery_destination` survives as an argument only for [`Fulfilment::Ship`], where the buyer
+/// genuinely chooses among the territories the offer serves — and it is checked against that list
+/// rather than trusted.
 pub fn place_of_supply(
     f: &Fulfilment,
     buyer_residence: Country,
     delivery_destination: Option<Country>,
-    stated_place: Option<Country>,
-) -> Option<Country> {
-    match f.place_of_supply_kind() {
-        PlaceOfSupplyKind::DeliveryDestination => delivery_destination,
-        PlaceOfSupplyKind::StatedPlace => stated_place,
-        PlaceOfSupplyKind::BuyerResidence => Some(buyer_residence),
+) -> Result<Country, SupplyError> {
+    match f {
+        // The buyer picks a destination, but only from what the seller offered.
+        Fulfilment::Ship { to } => {
+            let d = delivery_destination.ok_or(SupplyError::NoDestination)?;
+            if to.is_empty() || to.contains(&d) {
+                Ok(d)
+            } else {
+                Err(SupplyError::DestinationNotOffered)
+            }
+        }
+        // The place is part of the offer. There is no argument that can contradict it.
+        Fulfilment::Collect { at }
+        | Fulfilment::PerformAtPlace { at }
+        | Fulfilment::ReturnRequired { at, .. } => Ok(at.country),
+        Fulfilment::AccessGrant { at: Some(at) } => Ok(at.country),
+        // Nothing physical happens anywhere in particular; the buyer's residence governs.
+        Fulfilment::AccessGrant { at: None }
+        | Fulfilment::DigitalGrant
+        | Fulfilment::PerformRemote => Ok(buyer_residence),
     }
 }
 
@@ -145,36 +179,60 @@ mod tests {
                 locality: "Berlin".into(),
             },
         };
-        assert_eq!(place_of_supply(&f, NZ, None, Some(DE)), Some(DE));
+        assert_eq!(place_of_supply(&f, NZ, None), Ok(DE));
     }
 
-    /// Shipped goods follow the destination, not the buyer's residence — a buyer may ship to
-    /// somewhere they do not live.
+    /// The regression that motivated deriving the venue instead of accepting it. Previously a
+    /// caller could pass a country that disagreed with the fulfilment object and get it back —
+    /// a confident, plausible, wrong answer. There is now no argument capable of expressing it.
     #[test]
-    fn shipped_goods_follow_the_destination_not_the_buyer() {
-        let f = Fulfilment::Ship { to: vec![DE] };
-        assert_eq!(place_of_supply(&f, NZ, Some(DE), None), Some(DE));
-    }
-
-    #[test]
-    fn remote_service_follows_the_buyer() {
-        assert_eq!(
-            place_of_supply(&Fulfilment::PerformRemote, NZ, None, None),
-            Some(NZ)
-        );
-    }
-
-    /// A venue-based mode with no venue must not silently fall back to a party's country. Guessing
-    /// here produces a plausible, wrong tax treatment.
-    #[test]
-    fn missing_stated_place_refuses_to_guess() {
+    fn no_argument_can_contradict_the_venue_in_the_offer() {
         let f = Fulfilment::PerformAtPlace {
             at: PlaceRef {
                 country: DE,
                 locality: "Berlin".into(),
             },
         };
-        assert_eq!(place_of_supply(&f, NZ, Some(NZ), None), None);
+        // buyer in NZ, a delivery destination of ZA — neither can move a German event
+        assert_eq!(place_of_supply(&f, NZ, Some(ZA)), Ok(DE));
+    }
+
+    /// Shipped goods follow the destination, not the buyer's residence — a buyer may ship to
+    /// somewhere they do not live.
+    #[test]
+    fn shipped_goods_follow_the_destination_not_the_buyer() {
+        let f = Fulfilment::Ship { to: vec![DE, NZ] };
+        assert_eq!(place_of_supply(&f, NZ, Some(DE)), Ok(DE));
+    }
+
+    /// A destination the seller never offered is refused rather than resolved. Computing tax for
+    /// a delivery the seller did not agree to make would be confidently wrong in both directions.
+    #[test]
+    fn destination_outside_the_offer_is_refused() {
+        let f = Fulfilment::Ship { to: vec![NZ] };
+        assert_eq!(
+            place_of_supply(&f, NZ, Some(DE)),
+            Err(SupplyError::DestinationNotOffered)
+        );
+    }
+
+    #[test]
+    fn remote_service_follows_the_buyer() {
+        assert_eq!(
+            place_of_supply(&Fulfilment::PerformRemote, NZ, None),
+            Ok(NZ)
+        );
+    }
+
+    /// A shipped offer with no chosen destination refuses rather than falling back to a party's
+    /// country. Guessing here produces a plausible, wrong tax treatment.
+    #[test]
+    fn shipping_without_a_destination_refuses_to_guess() {
+        let f = Fulfilment::Ship { to: vec![NZ] };
+        assert_eq!(
+            place_of_supply(&f, NZ, None),
+            Err(SupplyError::NoDestination)
+        );
     }
 
     #[test]
