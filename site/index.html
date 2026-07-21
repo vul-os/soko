@@ -184,6 +184,20 @@ img{max-width:100%;display:block}
     </div>
   </div></section>
 
+
+  <section class="section" id="why"><div class="wrap">
+    <h2>What changes when there is no operator</h2>
+    <p class="lead">Every row below is something a platform currently owns on your behalf.</p>
+    <div class="grid">
+      <div class="card"><div class="dot"></div><h3>Your catalogue is yours</h3><p>A store is a signed, append-only feed published from a keypair. There is no account to be suspended and no operator who can edit, reorder or remove your listings. Delisting is not a permission anyone holds.</p></div>
+      <div class="card"><div class="dot"></div><h3>One product, many sellers</h3><p>A product record is content-addressed, so two sellers publishing the same record converge on the same address <em>by construction</em> — no GS1 fee, no ASIN, no registrar. <a href="./docs.html#catalogue" style="color:var(--muted);text-decoration:underline">Where this is still unproven &rarr;</a></p></div>
+      <div class="card"><div class="dot"></div><h3>Manufacturers sign their own facts</h3><p>A brand can sign the canonical record for its own product, so a reseller adds an <em>offer</em> but cannot misdescribe the thing. On a centralized marketplace, the marketplace is authoritative about your product. Here you are.</p></div>
+      <div class="card"><div class="dot"></div><h3>The cart is the buyer&rsquo;s</h3><p>Cart, wishlist and purchase history are CRDT state on the buyer&rsquo;s own devices, synced across them and surviving any store closing. A merchant never sees what else you are considering, because there is no shared session to see it in.</p></div>
+      <div class="card"><div class="dot"></div><h3>One cart, independent sellers</h3><p>Assemble a cart spanning sellers who have never heard of each other and check out once &mdash; including bundles whose components come from different sellers. A platform structurally cannot do this; separate stores mean separate checkouts.</p></div>
+      <div class="card"><div class="dot"></div><h3>Delivery computed, not brokered</h3><p>Carriers, distributors and peer couriers publish rate cards as signed public objects. Routing and consolidation are computed on the buyer&rsquo;s node &mdash; no quote API, no rate limit, no middleman learning what you are shopping for.</p></div>
+    </div>
+  </div></section>
+
   <section class="section" id="shape"><div class="wrap">
     <h2>One shape for every trade</h2>
     <p class="lead">Goods, services, rentals, bookings and subscriptions are the same object with four axes — not a plugin per category.</p>
@@ -224,7 +238,7 @@ cd soko &amp;&amp; cargo check --workspace
   <section class="section" id="limits"><div class="wrap">
     <div class="decent">
       <h2>What Soko does not remove</h2>
-      <p class="lead" style="margin-bottom:0">A decentralized design that hides its operator classes is lying about them. TRACT has one, and says so on the first page.</p>
+      <p class="lead" style="margin-bottom:0">A decentralized design that hides its operator classes is lying about them. TRACT has one, and says so on the first page. The closest thing to this that actually shipped &mdash; OpenBazaar &mdash; died in 2021 having moved about $86k in 14 months; the spec records why, in detail, rather than omitting it.</p>
       <div class="cols">
         <div><h4>Somebody renders the store</h4><p>A shopper with no keypair cannot verify a signature, so they trust a storefront gateway to have rendered honestly. Unlike DMTAP's mail gateway, this one never self-extinguishes — browsers are permanent. Any node can re-render the same store and be compared byte-for-byte; that bounds the trust, it does not remove it.</p></div>
         <div><h4>Somebody holds the money</h4><p>Holding funds for strangers is a licensed activity nearly everywhere. Escrow is an operator class: permissionless to enter, competing, chosen per-order by both parties, scoped to the jurisdictions it is actually licensed for — and never in possession of anyone's identity keys. Its every ruling is a signed public object, so unfair operators accumulate a permanent record of it.</p></div>

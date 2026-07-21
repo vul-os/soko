@@ -3,6 +3,40 @@
 A decentralized design that hides its operator classes is lying about them. This page collects what
 TRACT cannot do, in one place, without softening.
 
+## What the field evidence says
+
+Before the list of limits: the closest deployed relative of this design **failed**, and the largest
+live one **succeeded by adopting an operator**. Both belong here.
+
+**OpenBazaar** (signed objects, content-addressed listings, keypair identity, no operator; shut
+down January 2021):
+
+| Measure | Result |
+|---|---|
+| Lifetime participants | ~6,651 |
+| Concurrently online | ~80 |
+| Credible sales over 14 months | ~US$86,000 |
+| Median listing lifetime | ~22 days |
+| Share of measured sales value faked by one vendor | **60%** |
+
+Its four failure modes: negligible activity; **discovery re-centralized first** (the default
+crawler became a content-policy gatekeeper); **availability bounded by publisher liveness**
+(catalogues vanished when nodes left); and **reputation trivially ballot-stuffed** with opt-in
+escrow declined by exactly the actors it existed to constrain.
+
+**Beckn / ONDC** — the largest live decentralized-commerce network — avoids all four by doing the
+opposite of this design: a central registry that gates keys, approval-gated enrollment with
+whitelisting and probation, identity anchored to DNS/TLS rather than keypairs, and rate-limited
+operator-hosted discovery.
+
+The honest reading: **the network with volume chose an operator at exactly the three points this
+design tries to leave operator-free.** That is not proof this fails. It does mean the burden of
+proof sits here.
+
+*Caveats: the OpenBazaar figures come from a single peer-reviewed measurement study; sales are an
+acknowledged lower bound from voluntary feedback, and listing-lifetime conflates deliberate
+delisting with liveness eviction. Beckn docs and endpoints have changed since.*
+
 ## Operator classes
 
 TRACT has **one**: the gateway. DMTAP has one too, but DMTAP's self-extinguishes as adoption grows
@@ -41,8 +75,11 @@ bytes, they persist.**
 
 - **A public object is available exactly as long as some holder serves it.** Content addressing is
   a name, not a durability promise.
-- **A seller's node being offline** delays orders; it does not lose them, because the sender's node
-  retries. But a seller offline indefinitely is a seller whose store stops working.
+- **A seller's node being offline** delays orders but does not lose them — the sender's node
+  retries. **It does lose the catalogue.** An offline seller is invisible, not slow, and nobody is
+  obliged to serve their listings in their absence. This was OpenBazaar's measured failure, and
+  unpaid third-party replication is exactly what it did not attract. Whether pinning needs an
+  incentive — and whether that incentive creates another operator — is unresolved.
 - **Stranded inventory quota.** A partitioned replica holding unsold quota strands that stock until
   it rejoins.
 

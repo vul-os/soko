@@ -20,6 +20,17 @@ anyone, authoritative for nobody.
 
 **No registrar issues product IDs.** The global product list is an emergent consequence of hashing.
 
+> **How strong is this actually? Weaker than it sounds.** Convergence is trivially true for
+> identical bytes and says nothing about the real case: two shops describing the same shoe. A 2026
+> literature pass found **no deployed system achieving cross-publisher product identity without a
+> licensed registry**, and the one candidate for permissionless crawl-derived resolution was
+> refuted under adversarial verification. The two models that exist in the field are a permissioned
+> monopoly namespace (GS1 GTIN — licensed, fee-bearing, gated by national member organisations) and
+> a purely nominal string (schema.org `productGroupID`, no issuer, no uniqueness guarantee).
+> Nothing in between is deployed. So the content address is a sound **mechanism** with an
+> **unproven** claim resting on it, and the canonicalisation rules — not the hashing — are where
+> the work actually is.
+
 ## The identity ladder
 
 Byte-identity is brittle: two shops describing the same shoe will not produce identical bytes. So
@@ -67,3 +78,19 @@ explicit that this is **derived data**:
 
 This is the load-bearing distinction between an index and a marketplace, and the word
 "marketplace" is deliberately not used anywhere in the spec for anything TRACT defines.
+
+### But permission is not practice
+
+"Any node may build an index" does not mean many will, and this is the design's weakest point
+rather than one of its strengths.
+
+A content-addressed substrate has no global index, so **discovery is the first function to
+re-centralize**: whichever index becomes economically dominant becomes a de facto content-policy
+gatekeeper no matter what the protocol permits. That is precisely what happened to OpenBazaar, the
+closest deployed relative of this design — its default search engine became the gatekeeper. And
+Beckn/ONDC, the largest live decentralized-commerce network, avoids the problem only by adopting a
+central, approval-gating registry with rate-limited lookup: the opposite of this design, at the
+exact point this design is weakest.
+
+Multiple competing indexers with verifiable completeness or censorship proofs is the candidate
+answer. It has **no deployed precedent**. See [Threat model](./threat-model.md).

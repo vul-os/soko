@@ -77,6 +77,23 @@ service, with four separate anchors for seller, buyer, place of supply and deliv
 Escrow availability is narrower, because escrow operators are licensed per jurisdiction. See
 [Jurisdiction](./jurisdiction.md).
 
+### Hasn't this been tried and failed?
+
+Yes. **OpenBazaar** was the closest relative — signed objects, content-addressed listings, keypair
+identity, no operator — and it shut down in 2021 having moved about US$86,000 over 14 months, with
+~80 users online at a time and one vendor faking 60% of measured sales value. Its catalogues
+disappeared when merchant nodes went offline, and its default search engine became the gatekeeper
+the design was meant to avoid.
+
+Meanwhile **Beckn/ONDC**, the largest live decentralized-commerce network, works precisely because
+it reintroduced a central registry with approval-gated enrollment.
+
+That evidence is recorded in the specification rather than omitted from it, and it is the reason
+several claims on these pages are hedged where a marketing page would not hedge them. What is
+different here — purchase-attested reviews, gateways as a liveness backstop, buyer-held carts,
+sealed orders with signed transitions — are answers to specific OpenBazaar failures. Whether they
+are *sufficient* answers is not yet demonstrated by anything.
+
 ### Can I use it today?
 
 No. It is pre-alpha and the specification is being written first, on purpose.

@@ -8,9 +8,16 @@
 At minimum: a keypair and a machine that is usually on. That is the whole requirement — no domain,
 no static IP, no port forwarding, no account anywhere.
 
+> **Read this before choosing a machine.** Durability at the edges covers *orders*, not
+> *catalogues*. A seller whose node is offline is not slow — they are **invisible**, because there
+> is nobody else obliged to serve their listings. OpenBazaar measured a ~22-day median listing
+> lifetime and whole catalogues vanishing when a merchant node departed. An always-on node, a
+> third-party pinning arrangement, or a gateway serving your store is therefore a practical
+> requirement for anyone who wants to be findable, not an optimisation.
+
 | You have | What works |
 |---|---|
-| a laptop that sleeps | publish a catalogue; orders arrive when you wake, via content-free push and the sender's retry queue |
+| a laptop that sleeps | receives orders when you wake, via content-free push and the sender's retry queue — but **your catalogue is unreachable while you sleep**, so you are not discoverable |
 | a small always-on box (Pi, NAS, VPS) | full node: catalogue, sealed orders, inventory across replicas |
 | a box behind CGNAT | reachable by key via the substrate's relay ladder — no tunnel service required |
 | your own domain | optional convenience; identity is the keypair, not the name |

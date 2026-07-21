@@ -19,9 +19,20 @@ This is stronger than a platform's "verified purchase" badge, because it is veri
 rather than asserted by the platform. And it puts a floor under Sybil attacks: **ballot-stuffing
 requires actually buying the thing**, at real cost, repeatedly.
 
-It does not eliminate manipulation. A determined seller can buy from itself. The attestation makes
-that expensive and leaves a public trail; it does not make it impossible, and no reputation system
-in the literature does.
+It does not eliminate manipulation, and the failure mode is measured rather than hypothetical.
+OpenBazaar — self-published unweighted reviews, no banning authority, opt-in escrow — had **one
+vendor fake 60% of all measured sales value**. Purchase attestation is strictly stronger than what
+OpenBazaar had, but two of its failure conditions survive:
+
+1. **Self-dealing produces genuine attestations.** A seller transacting with itself generates real
+   proofs. Attestation raises the cost; it does not establish that the counterparty was independent.
+2. **Opt-in escrow is declined by exactly the actors it constrains.** Escrow here is per-order and
+   optional, for a good reason — mandatory escrow would exclude regions no licensed operator
+   serves. But the measured consequence of optionality is that it goes unused where it matters
+   most. Both of those cannot be true for free, and this design pays on the second.
+
+What the achievable Sybil-cost floor is on a signed-feed substrate is genuinely unknown; it has not
+been researched here, and claiming otherwise would be inventing a result.
 
 ## Ranking is derived
 
