@@ -225,3 +225,10 @@ rule at every call site.
 
 MIT — so any party, including competitors, may embed it. The TRACT specification is licensed
 separately under CC BY 4.0.
+
+---
+
+<p align="center">
+  <a href="https://vulos.org"><img src="site/assets/vulos-logo.png" alt="vulos" height="20"></a><br>
+  <sub><a href="https://vulos.org"><b>vulos</b></a> — open by design</sub>
+</p>
