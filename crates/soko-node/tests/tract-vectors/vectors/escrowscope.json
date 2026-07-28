@@ -1,0 +1,53 @@
+{
+  "id": "TRACT-WIRE-VEC-17",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.4",
+  "title": "EscrowScope — full object",
+  "kind": "cbor-encoding",
+  "description": "`EscrowScope` (§16.5.4): operator, 3 country lists, currencies, rail classes, value ceiling, excluded categories, claimed authorities.",
+  "cases": [
+    {
+      "name": "US/EU-facing operator scope",
+      "note": "9-entry map, keys 1-9 ascending. `rail_classes` (key 6) is `[* RailClass]` where `RailClass = 0 / 1` (§16.5.4) — plain small integers, not a nested map.",
+      "input": {
+        "1": {
+          "__bytes__": "6f70657261746f722d696b000000000000000000000000000000000000000000"
+        },
+        "2": [
+          "US",
+          "CA"
+        ],
+        "3": [
+          "GB",
+          "FR",
+          "DE"
+        ],
+        "4": [
+          "US",
+          "GB"
+        ],
+        "5": [
+          "USD",
+          "EUR"
+        ],
+        "6": [
+          0,
+          1
+        ],
+        "7": {
+          "1": 1000000,
+          "2": "USD"
+        },
+        "8": [
+          "weapons"
+        ],
+        "9": [
+          "MSB-registered-US",
+          "EMI-licensed-EU"
+        ]
+      },
+      "expected_hex": "a90158206f70657261746f722d696b000000000000000000000000000000000000000000028262555362434103836247426246526244450482625553624742058263555344634555520682000107a2011a000f42400263555344088167776561706f6e730982714d53422d726567697374657265642d55536f454d492d6c6963656e7365642d4555"
+    }
+  ]
+}

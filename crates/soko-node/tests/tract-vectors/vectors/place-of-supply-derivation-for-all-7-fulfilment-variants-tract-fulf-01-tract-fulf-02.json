@@ -1,0 +1,113 @@
+{
+  "id": "TRACT-WIRE-VEC-13",
+  "suite_ids": [
+    "TRACT-FULF-01",
+    "TRACT-FULF-02"
+  ],
+  "coverage": "full",
+  "section": "§4.3, §16.5.2",
+  "title": "Place-of-supply derivation for all 7 Fulfilment variants (TRACT-FULF-01, TRACT-FULF-02)",
+  "kind": "derived-value",
+  "description": "§4.3's derivation table, applied to every Fulfilment variant from TRACT-WIRE-VEC-09, with a constant seller establishment and buyer residence held across every case specifically so a reader can see the anchor is NEVER either of those two values except in the two variants §4.3 says should equal buyer residence. The 'ship' case additionally demonstrates TRACT-FULF-02: the anchor is bound only once the buyer's fulfilment choice (the one destination out of the offer's served list) is recorded on the order, per §4.8.",
+  "formula": "place_of_supply",
+  "cases": [
+    {
+      "name": "ship — anchor is the ORDER's chosen destination, not the offer's whole destination list",
+      "note": "§4.3: ship -> delivery destination. The Fulfilment object lists destinations SERVED (['FR', 'DE', 'ZA']); the actual anchor is whichever ONE the buyer chose on the order (§4.8, TRACT-FULF-02) — here 'FR'. Seller establishment (ZA) and buyer residence (DE) play no role.",
+      "input": {
+        "fulfilment": {
+          "0": [
+            "FR",
+            "DE",
+            "ZA"
+          ]
+        },
+        "chosen_destination": "FR"
+      },
+      "expected": "FR"
+    },
+    {
+      "name": "collect — anchor is the stated place",
+      "note": "§4.3: collect -> the stated place. PlaceRef.country = 'IT', independent of seller (ZA) and buyer (DE).",
+      "input": {
+        "fulfilment": {
+          "1": {
+            "1": "IT",
+            "2": "Milan"
+          }
+        }
+      },
+      "expected": "IT"
+    },
+    {
+      "name": "digital-grant — anchor is buyer residence",
+      "note": "§4.3: digital-grant -> buyer residence ('nothing physical happens anywhere'). Anchor = 'DE'.",
+      "input": {
+        "fulfilment": {
+          "2": null
+        }
+      },
+      "expected": "DE"
+    },
+    {
+      "name": "perform-at-place — THE §0.1/§4.3/§11.2 forcing example, verbatim (TRACT-FULF-01)",
+      "note": "The exact case TRACT-FULF-01 and §4.3 both cite: an event held in country C ('FR', the venue), sold by a seller established in country A ('ZA'), to a buyer resident in country B ('DE'). Only the venue answers the place-of-supply question; neither party's country does. Anchor = 'FR', matching neither A nor B.",
+      "input": {
+        "fulfilment": {
+          "3": {
+            "1": "FR",
+            "2": "Cannes"
+          }
+        }
+      },
+      "expected": "FR"
+    },
+    {
+      "name": "perform-remote — anchor is buyer residence",
+      "note": "§4.3: perform-remote -> buyer residence ('no physical venue to anchor to'). Anchor = 'DE'.",
+      "input": {
+        "fulfilment": {
+          "4": null
+        }
+      },
+      "expected": "DE"
+    },
+    {
+      "name": "access-grant, place named — anchor is that place",
+      "note": "§4.3: access-grant -> the stated place, if named. Anchor = 'GB'.",
+      "input": {
+        "fulfilment": {
+          "5": {
+            "1": "GB",
+            "2": "London"
+          }
+        }
+      },
+      "expected": "GB"
+    },
+    {
+      "name": "access-grant, no place named — anchor is buyer residence",
+      "note": "§4.3: access-grant -> buyer residence, otherwise. Anchor = 'DE'. Same Fulfilment variant (key 5) as the previous case, opposite anchor — 'the field name is shared by two economically different cases, and the anchor has to follow whichever one this instance actually is' (§4.3).",
+      "input": {
+        "fulfilment": {
+          "5": null
+        }
+      },
+      "expected": "DE"
+    },
+    {
+      "name": "return-required — anchor is the stated place",
+      "note": "§4.3: return-required -> the stated place ('the same reasoning as collect — the item changes hands there'). Anchor = 'JP'; the term (30 days, key 7) does not affect the anchor.",
+      "input": {
+        "fulfilment": {
+          "6": {
+            "1": "JP",
+            "2": "Osaka"
+          },
+          "7": 30
+        }
+      },
+      "expected": "JP"
+    }
+  ]
+}

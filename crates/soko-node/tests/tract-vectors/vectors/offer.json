@@ -1,0 +1,45 @@
+{
+  "id": "TRACT-WIRE-VEC-11",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.2",
+  "title": "Offer — one complete object touching all four axes at once",
+  "kind": "cbor-encoding",
+  "description": "A single realistic Offer (a hairdresser's appointment slot) exercising all six top-level keys together: Item (service), Availability (time-slots), Fulfilment (perform-at-place), Consideration (fixed), sell_to and published. This is the 'Offer with each of the four axes' vector the task asked for as one worked example, distinct from TRACT-WIRE-VEC-07..10 which enumerate every variant of each axis in isolation.",
+  "cases": [
+    {
+      "name": "haircut appointment offer",
+      "note": "6-entry map, keys 1-6 all present and already ascending. `published` (1755000000000 ms since epoch) needs the 8-byte uint form (0x1B) since it exceeds 2**32-1.",
+      "input": {
+        "1": {
+          "3": {
+            "__bytes__": "686169726375742d736572766963652d61646472000000000000000000000000"
+          }
+        },
+        "2": {
+          "1": "FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16",
+          "2": 30
+        },
+        "3": {
+          "3": {
+            "1": "FR",
+            "2": "Paris, 8th arrondissement"
+          }
+        },
+        "4": {
+          "0": {
+            "1": 4500,
+            "2": "EUR"
+          }
+        },
+        "5": [
+          "FR",
+          "DE",
+          "BE"
+        ],
+        "6": 1755000000000
+      },
+      "expected_hex": "a601a1035820686169726375742d736572766963652d6164647200000000000000000000000002a2017828465245513d4441494c593b4259484f55523d392c31302c31312c31322c31332c31342c31352c313602181e03a103a20162465202781950617269732c20387468206172726f6e64697373656d656e7404a100a20119119402634555520583624652624445624245061b000001989e26ce00"
+    }
+  ]
+}

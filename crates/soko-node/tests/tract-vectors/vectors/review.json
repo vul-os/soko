@@ -1,0 +1,106 @@
+{
+  "id": "TRACT-WIRE-VEC-21",
+  "suite_ids": [
+    "TRACT-PUBSEAL-03"
+  ],
+  "coverage": "full",
+  "section": "§16.5.5, §16.2, §0.5.1",
+  "title": "Review — closed field set and score bound (TRACT-PUBSEAL-03)",
+  "kind": "structural-check",
+  "description": "TRACT-PUBSEAL-03: 'a Review is rejected if it carries any field outside the bounded set §10.4 permits'. §16.5.5 gives Review's CDDL as exactly keys 1-6 with no address/contact production anywhere in it, and its own prose confirms (unlike Offer, whose signed status §16.8 leaves open) that 'a review is the one public object signed by a natural person' — so §16.2's 'signed objects reject unknown keys fail-closed' applies unambiguously. This is the one PUBSEAL-family case this corpus can cover without inventing semantic personal-data classification or resolving an open question — see vectors/README.md for TRACT-PUBSEAL-01/02/04, which are NOT covered and why.",
+  "checker": "review_rejects_unknown_keys / review_score_in_range",
+  "cases": [
+    {
+      "name": "valid review -> accepted",
+      "note": "Keys {1,2,3,4,5,6} ⊆ the known set {1,2,3,4,5,6}; score 4 is within 0..5.",
+      "input": {
+        "1": {
+          "0": {
+            "__bytes__": "70726f647563742d616464720000000000000000000000000000000000000000"
+          }
+        },
+        "2": {
+          "__bytes__": "617574686f722d7065722d7375626a6563742d7375626b657900000000000000"
+        },
+        "3": 4,
+        "4": "Fast shipping, exactly as described.",
+        "5": {
+          "1": 0,
+          "2": {
+            "__bytes__": "73656c6c65722d696b0000000000000000000000000000000000000000000000"
+          },
+          "3": {
+            "__bytes__": "6f726465722d6164647200000000000000000000000000000000000000000000"
+          },
+          "4": 1754990000000
+        },
+        "6": 1755000000000
+      },
+      "expected": {
+        "rejects_unknown_keys_check": true,
+        "score_in_range_check": true
+      }
+    },
+    {
+      "name": "extra key 7 (an attempted address smuggle) -> rejected",
+      "note": "Keys {1..7} is NOT a subset of {1..6}; key 7 is unknown to the Review production. Per §16.2 a signed object rejects this on decode — the smuggled '123 Main St, Springfield' string never has a field to occupy in the first place. (§16.5.5 already notes body/tstr fields remain free text a person could still type an address into — this vector is only about the KEY-level smuggle, not that separate, acknowledged-open gap.)",
+      "input": {
+        "1": {
+          "0": {
+            "__bytes__": "70726f647563742d616464720000000000000000000000000000000000000000"
+          }
+        },
+        "2": {
+          "__bytes__": "617574686f722d7065722d7375626a6563742d7375626b657900000000000000"
+        },
+        "3": 4,
+        "4": "Fast shipping, exactly as described.",
+        "5": {
+          "1": 0,
+          "2": {
+            "__bytes__": "73656c6c65722d696b0000000000000000000000000000000000000000000000"
+          },
+          "3": {
+            "__bytes__": "6f726465722d6164647200000000000000000000000000000000000000000000"
+          },
+          "4": 1754990000000
+        },
+        "6": 1755000000000,
+        "7": "123 Main St, Springfield"
+      },
+      "expected": {
+        "rejects_unknown_keys_check": false
+      }
+    },
+    {
+      "name": "score 7 (out of 0..5) -> rejected",
+      "note": "§16.5.5: 'score, 0..5' stated directly in the CDDL comment. 7 > 5.",
+      "input": {
+        "1": {
+          "0": {
+            "__bytes__": "70726f647563742d616464720000000000000000000000000000000000000000"
+          }
+        },
+        "2": {
+          "__bytes__": "617574686f722d7065722d7375626a6563742d7375626b657900000000000000"
+        },
+        "3": 7,
+        "4": "Fast shipping, exactly as described.",
+        "5": {
+          "1": 0,
+          "2": {
+            "__bytes__": "73656c6c65722d696b0000000000000000000000000000000000000000000000"
+          },
+          "3": {
+            "__bytes__": "6f726465722d6164647200000000000000000000000000000000000000000000"
+          },
+          "4": 1754990000000
+        },
+        "6": 1755000000000
+      },
+      "expected": {
+        "score_in_range_check": false
+      }
+    }
+  ]
+}

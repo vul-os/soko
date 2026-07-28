@@ -1,0 +1,167 @@
+{
+  "id": "TRACT-WIRE-VEC-18",
+  "suite_ids": [
+    "TRACT-SETTLE-01"
+  ],
+  "coverage": "partial",
+  "section": "§9.4, §16.5.4",
+  "title": "EscrowScope checkout intersection — success and empty-intersection refusal (TRACT-SETTLE-01, partial)",
+  "kind": "derived-value",
+  "description": "§9.4: 'Fail-closed scope intersection at checkout, and the requirement that an empty intersection is disclosed rather than silently downgraded', over the exact fields §16.5.4 defines. §9.4 names WHICH fields intersect but not, for the two non-set fields, what intersecting them numerically means — this vector applies the reading documented in `escrow_scope_intersect`'s docstring (value ceiling: narrower/min; excluded categories: union) and is marked PARTIAL because that reading is necessary-but-unstated, not quoted spec text. What IS textually direct: the five set-valued fields intersect as literal set intersection, and an empty result on any of them is refused rather than narrowed to whatever validates.",
+  "formula": "escrow_scope_intersect",
+  "cases": [
+    {
+      "name": "compatible scopes -> intersection succeeds",
+      "note": "buyer_countries {US,CA}∩{US,MX}={US}; seller_countries {GB,DE}∩{GB,FR}={GB}; supply_countries {US}∩{US,GB}={US}; currencies {USD,EUR}∩{USD}={USD}; rail_classes {0,1}∩{0}={0}; value ceiling both USD -> min(5000.00,3000.00)=3000.00 USD; excluded_categories union {weapons}∪{alcohol}={alcohol,weapons}. No field intersects to empty -> disclosed as a successful, narrower scope.",
+      "input": {
+        "buyer_scope": {
+          "2": [
+            "US",
+            "CA"
+          ],
+          "3": [
+            "GB",
+            "DE"
+          ],
+          "4": [
+            "US"
+          ],
+          "5": [
+            "USD",
+            "EUR"
+          ],
+          "6": [
+            0,
+            1
+          ],
+          "7": {
+            "1": 500000,
+            "2": "USD"
+          },
+          "8": [
+            "weapons"
+          ]
+        },
+        "gateway_scope": {
+          "2": [
+            "US",
+            "MX"
+          ],
+          "3": [
+            "GB",
+            "FR"
+          ],
+          "4": [
+            "US",
+            "GB"
+          ],
+          "5": [
+            "USD"
+          ],
+          "6": [
+            0
+          ],
+          "7": {
+            "1": 300000,
+            "2": "USD"
+          },
+          "8": [
+            "alcohol"
+          ]
+        }
+      },
+      "expected": {
+        "refused": false,
+        "scope": {
+          "2": [
+            "US"
+          ],
+          "3": [
+            "GB"
+          ],
+          "4": [
+            "US"
+          ],
+          "5": [
+            "USD"
+          ],
+          "6": [
+            0
+          ],
+          "7": {
+            "1": 300000,
+            "2": "USD"
+          },
+          "8": [
+            "alcohol",
+            "weapons"
+          ]
+        }
+      }
+    },
+    {
+      "name": "disjoint currencies -> refused",
+      "note": "buyer offers only USD, gateway offers only EUR -> currencies intersect to the empty set. Per §9.4 this is refused and disclosed as a refusal outright — the other four fields' overlap is irrelevant once one field is empty; it is never narrowed to 'proceed without currency agreement'.",
+      "input": {
+        "buyer_scope": {
+          "2": [
+            "US",
+            "CA"
+          ],
+          "3": [
+            "GB",
+            "DE"
+          ],
+          "4": [
+            "US"
+          ],
+          "5": [
+            "USD"
+          ],
+          "6": [
+            0,
+            1
+          ],
+          "7": {
+            "1": 500000,
+            "2": "USD"
+          },
+          "8": [
+            "weapons"
+          ]
+        },
+        "gateway_scope": {
+          "2": [
+            "US",
+            "MX"
+          ],
+          "3": [
+            "GB",
+            "FR"
+          ],
+          "4": [
+            "US",
+            "GB"
+          ],
+          "5": [
+            "EUR"
+          ],
+          "6": [
+            0
+          ],
+          "7": {
+            "1": 300000,
+            "2": "USD"
+          },
+          "8": [
+            "alcohol"
+          ]
+        }
+      },
+      "expected": {
+        "refused": true,
+        "reason": "empty intersection on: currencies — §9.4: an empty intersection is refused and disclosed, never silently narrowed to whichever subset validates"
+      }
+    }
+  ]
+}

@@ -612,7 +612,6 @@ version = "0.1.0"
 dependencies = [
  "ciborium",
  "serde",
- "soko-seam",
  "thiserror",
 ]
 
@@ -631,7 +630,6 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "soko-core",
- "thiserror",
 ]
 
 [[package]]
@@ -657,7 +655,6 @@ dependencies = [
  "soko-delivery",
  "soko-jurisdiction",
  "soko-offer",
- "soko-seam",
  "soko-trust",
 ]
 
@@ -675,6 +672,7 @@ dependencies = [
 name = "soko-node"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "serde_json",
  "soko-catalog",
  "soko-core",
@@ -683,7 +681,6 @@ dependencies = [
  "soko-jurisdiction",
  "soko-offer",
  "soko-order",
- "soko-seam",
  "soko-settle",
  "soko-trust",
 ]
@@ -703,7 +700,6 @@ dependencies = [
  "proptest",
  "serde",
  "soko-core",
- "soko-offer",
  "thiserror",
 ]
 

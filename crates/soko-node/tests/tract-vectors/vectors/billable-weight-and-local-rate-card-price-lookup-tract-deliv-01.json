@@ -1,0 +1,65 @@
+{
+  "id": "TRACT-WIRE-VEC-15",
+  "suite_ids": [
+    "TRACT-DELIV-01"
+  ],
+  "coverage": "full",
+  "section": "§16.5.3, §4",
+  "title": "Billable weight and local rate-card price lookup (TRACT-DELIV-01)",
+  "kind": "derived-value",
+  "description": "§16.5.3: 'dim_divisor — billable = max(actual, L*W*H / divisor)'. TRACT-DELIV-01 asserts a leg's price is computed LOCALLY from a published RateCard, without a live call to the carrier. All three cases reuse zone 1's brackets from TRACT-WIRE-VEC-14's RateCard example. Units: §16 does not pin L/W/H or dim_divisor to a length unit; every case here is constructed so L*W*H/divisor divides exactly, so the (open, unspecified) rounding question never has to be answered to check the arithmetic (see `volumetric_weight`'s docstring). `dim_divisor` is read as the carrier's own calibration constant that already lands the result in the same unit as `actual` and `WeightBracket.max_grams` (grams) — a real carrier's published divisor is exactly the free parameter that makes that true for its own cm/kg convention; nothing here asserts a specific real-world divisor value is standard.",
+  "formula": "billable_weight, select_bracket",
+  "cases": [
+    {
+      "name": "actual weight dominates",
+      "note": "volumetric = 10*10*10 / 1000 = 1000/1000 = 1g (exact). billable = max(4000, 1) = 4000g. Zone 1's brackets (max_grams, price EUR minor units) are (1000,500) (5000,900) (20000,1800); the smallest max_grams >= 4000 is 5000 -> price 900.",
+      "input": {
+        "actual_grams": 4000,
+        "l_cm": 10,
+        "w_cm": 10,
+        "h_cm": 10,
+        "dim_divisor": 1000
+      },
+      "expected": {
+        "volumetric_grams": 1,
+        "billable_grams": 4000,
+        "selected_bracket_max_grams": 5000,
+        "price_eur_minor_units": 900
+      }
+    },
+    {
+      "name": "volumetric weight dominates",
+      "note": "volumetric = 100*80*125 / 1000 = 1000000/1000 = 1000g (exact). billable = max(200, 1000) = 1000g. Smallest bracket max_grams >= 1000 is exactly 1000 -> price 500 (the boundary is inclusive under the >= rule stated in the `select_bracket` docstring).",
+      "input": {
+        "actual_grams": 200,
+        "l_cm": 100,
+        "w_cm": 80,
+        "h_cm": 125,
+        "dim_divisor": 1000
+      },
+      "expected": {
+        "volumetric_grams": 1000,
+        "billable_grams": 1000,
+        "selected_bracket_max_grams": 1000,
+        "price_eur_minor_units": 500
+      }
+    },
+    {
+      "name": "tie — actual equals volumetric",
+      "note": "volumetric = 100*50*40 / 100 = 200000/100 = 2000g (exact), equal to actual (2000g). max(2000, 2000) = 2000g either way. Smallest bracket >= 2000 is 5000 -> price 900.",
+      "input": {
+        "actual_grams": 2000,
+        "l_cm": 100,
+        "w_cm": 50,
+        "h_cm": 40,
+        "dim_divisor": 100
+      },
+      "expected": {
+        "volumetric_grams": 2000,
+        "billable_grams": 2000,
+        "selected_bracket_max_grams": 5000,
+        "price_eur_minor_units": 900
+      }
+    }
+  ]
+}

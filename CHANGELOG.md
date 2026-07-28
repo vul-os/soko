@@ -13,8 +13,10 @@ and isn't there yet.
 ### Added
 
 - Workspace scaffolding for all 11 crates named in TRACT, with the dependency direction fixed from
-  the first commit: everything depends on `soko-core`, `soko-core` depends on `soko-seam`,
-  `soko-seam` depends on nothing.
+  the first commit: everything depends on `soko-core`, and `soko-seam` depends on nothing. (The
+  original wording had `soko-core` depending on `soko-seam`; it declared that dependency without
+  ever naming it, and the declaration has since been removed — `soko-settle` is the one crate that
+  uses the seam.)
   - `soko-seam` (§9, §12) — settlement / escrow / storefront traits naming no provider. Zero
     dependencies, enforced in CI.
   - `soko-core` (§16) — content addresses, money, places, time, and the `public` / `sealed` type
@@ -46,6 +48,23 @@ and isn't there yet.
 - Landing page and docs site under `site/`, and `tools/diagrams.mjs` rendering the architecture
   diagrams from a single mermaid source rather than hand-maintained images.
 - MIT licence for this implementation; TRACT itself is licensed separately under CC BY 4.0.
+
+### Fixed
+
+- The conformance harness verified nothing. It read the TRACT vectors from a sibling `../tract`
+  checkout, and when that was absent it printed a skip and returned — but `cargo test` discards a
+  *passing* test's output, so the skip was invisible, and TRACT had meanwhile moved into the KOTVA
+  repository as a profile, so `../tract` resolved nowhere. The corpus is now vendored into
+  `crates/soko-node/tests/tract-vectors/` with a BLAKE3 digest per file, so the checks run in any
+  checkout with no network and no sibling repository; a separate check compares the vendored copy
+  against a spec checkout where one is present, and writes its skip to the process's real stderr,
+  which libtest does not capture.
+- Three of that harness's "no Soko function computes this" notes were stale. `Zone::select_bracket`
+  and `EscrowScope::intersect` had been written specifically because the vectors asked for them,
+  and nothing noticed they were now checkable, because the file that would have said so never ran.
+  Both are checked now: 21 vector cases agree, up from 13 reported and 0 actually executed.
+- Removed five dependency declarations no source file referenced: `soko-seam` from `soko-core`,
+  `soko-gateway` and `soko-node`; `thiserror` from `soko-erasure`; `soko-offer` from `soko-order`.
 
 ### Known limits at this stage
 

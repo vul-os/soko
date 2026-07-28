@@ -1,0 +1,37 @@
+{
+  "id": "TRACT-WIRE-VEC-03",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.1",
+  "title": "Attribute — canonical encoding and the array-ordering rule's unambiguous slice",
+  "kind": "cbor-encoding",
+  "description": "`Attribute = { 1 => tstr, 2 => tstr }` (key, value), and `ProductRecord` field 3 is commented '[* Attribute], attributes sorted, deduplicated, keys casefolded'. CBOR canonicalisation itself does not reorder ARRAY elements (only MAP keys, §16.2) — the sort is an application-level canonicalisation step that has to happen before encoding. This vector only covers the part of that rule the text pins down unambiguously: casefolded lexicographic order with NO key collision. §16.5.1 does not state a tie-break for two attributes that casefold to the same key (overwrite? keep both? keep first/last?), so that case is deliberately not attempted here — inventing a tie-break would be exactly the kind of gap-filling this corpus exists to avoid.",
+  "cases": [
+    {
+      "name": "two attributes, published out of order",
+      "note": "Input order is [dpi, color]. Casefolded lexicographic order is 'color' < 'dpi', so the canonical array is [color, dpi] — 'color' sorts first regardless of publication order. Each Attribute map encodes with key 1 before key 2 (already ascending).",
+      "input": [
+        {
+          "1": "dpi",
+          "2": "1600"
+        },
+        {
+          "1": "color",
+          "2": "black"
+        }
+      ],
+      "expected_hex": "82a20163647069026431363030a20165636f6c6f720265626c61636b",
+      "canonical_order_input": [
+        {
+          "1": "color",
+          "2": "black"
+        },
+        {
+          "1": "dpi",
+          "2": "1600"
+        }
+      ],
+      "canonical_order_expected_hex": "82a20165636f6c6f720265626c61636ba20163647069026431363030"
+    }
+  ]
+}

@@ -11,4 +11,3 @@ authors.workspace = true
 [dependencies]
 soko-core = { path = "../soko-core" }
 serde.workspace = true
-thiserror.workspace = true

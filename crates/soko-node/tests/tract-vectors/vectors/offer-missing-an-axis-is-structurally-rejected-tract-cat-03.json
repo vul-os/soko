@@ -1,0 +1,72 @@
+{
+  "id": "TRACT-WIRE-VEC-12",
+  "suite_ids": [
+    "TRACT-CAT-03"
+  ],
+  "coverage": "full",
+  "section": "§16.5.2",
+  "title": "Offer missing an axis is structurally rejected (TRACT-CAT-03)",
+  "kind": "structural-check",
+  "description": "§16.5.2's CDDL gives `Offer` keys 1 (Item), 2 (Availability), 3 (Fulfilment), 4 (Consideration) with no `?` prefix on any of the four — all four are mandatory fields of the map production itself, not values that default when absent. TRACT-CAT-03 asserts exactly this: a partially-specified offer is rejected, not accepted with the missing axis defaulted.",
+  "checker": "offer_declares_all_axes",
+  "cases": [
+    {
+      "name": "all four axes present -> accepted",
+      "note": "Keys present: {1,2,3,4,5,6} ⊇ {1,2,3,4} — the mandatory set is satisfied.",
+      "input": {
+        "1": {
+          "3": {
+            "__bytes__": "686169726375742d736572766963652d61646472000000000000000000000000"
+          }
+        },
+        "2": {
+          "1": "FREQ=DAILY",
+          "2": 30
+        },
+        "3": {
+          "3": {
+            "1": "FR",
+            "2": "Cannes"
+          }
+        },
+        "4": {
+          "0": {
+            "1": 4500,
+            "2": "EUR"
+          }
+        },
+        "5": [
+          "FR"
+        ],
+        "6": 1755000000000
+      },
+      "expected": true
+    },
+    {
+      "name": "Consideration (key 4) absent -> rejected",
+      "note": "Keys present: {1,2,3,5,6} does NOT include 4 — the map does not match the `Offer` production at all; it is not 'a valid Offer with an empty price', there is no such thing to decode as, so decode must fail rather than proceed with a missing/defaulted Consideration.",
+      "input": {
+        "1": {
+          "3": {
+            "__bytes__": "686169726375742d736572766963652d61646472000000000000000000000000"
+          }
+        },
+        "2": {
+          "1": "FREQ=DAILY",
+          "2": 30
+        },
+        "3": {
+          "3": {
+            "1": "FR",
+            "2": "Cannes"
+          }
+        },
+        "5": [
+          "FR"
+        ],
+        "6": 1755000000000
+      },
+      "expected": false
+    }
+  ]
+}

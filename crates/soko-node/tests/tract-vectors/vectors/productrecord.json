@@ -1,0 +1,58 @@
+{
+  "id": "TRACT-WIRE-VEC-05",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.1",
+  "title": "ProductRecord — full object with optional fields present",
+  "kind": "cbor-encoding",
+  "description": "`ProductRecord = { 1 => tstr, 2 => tstr, 3 => [* Attribute], 4 => [* IdentityRung], ?5 => content-address, ?6 => [* content-address] }`. Exercises every field including the two optional ones (group, components).",
+  "cases": [
+    {
+      "name": "full record",
+      "note": "6-entry map, keys 1..6 already ascending. Field 3 is the pre-canonicalised attribute array from TRACT-WIRE-VEC-03 (color before dpi). Field 4 is a single-rung identity ladder (ClaimedExternalRung, from TRACT-WIRE-VEC-04) — kept to one rung to sidestep the unresolved 'weakest first' ordering across multiple rungs, same reasoning as TRACT-WIRE-VEC-04. Field 5 (group) and field 6 (components, a 2-element array) are both placeholder content-addresses.",
+      "input": {
+        "1": "Wireless Optical Mouse",
+        "2": "2.4GHz wireless optical mouse, 3 buttons, USB receiver",
+        "3": [
+          {
+            "1": "color",
+            "2": "black"
+          },
+          {
+            "1": "dpi",
+            "2": "1600"
+          }
+        ],
+        "4": [
+          {
+            "1": "gtin",
+            "2": "00012345678905"
+          }
+        ],
+        "5": {
+          "__bytes__": "70726f647563742d67726f75702d616464720000000000000000000000000000"
+        },
+        "6": [
+          {
+            "__bytes__": "636f6d706f6e656e742d312d6164647200000000000000000000000000000000"
+          },
+          {
+            "__bytes__": "636f6d706f6e656e742d322d6164647200000000000000000000000000000000"
+          }
+        ]
+      },
+      "expected_hex": "a60176576972656c657373204f70746963616c204d6f757365027836322e3447487a20776972656c657373206f70746963616c206d6f7573652c203320627574746f6e732c205553422072656365697665720382a20165636f6c6f720265626c61636ba201636470690264313630300481a201646774696e026e303030313233343536373839303505582070726f647563742d67726f75702d61646472000000000000000000000000000006825820636f6d706f6e656e742d312d61646472000000000000000000000000000000005820636f6d706f6e656e742d322d6164647200000000000000000000000000000000"
+    },
+    {
+      "name": "minimal record (optional fields absent)",
+      "note": "Only the mandatory keys 1-4 are present; fields 3 and 4 are present as EMPTY arrays (they are `[* X]`, zero-or-more, not optional fields — there is no `?` before keys 3 or 4 in §16.5.1's CDDL, unlike keys 5 and 6). 4-entry map.",
+      "input": {
+        "1": "Unbranded Widget",
+        "2": "",
+        "3": [],
+        "4": []
+      },
+      "expected_hex": "a40170556e6272616e64656420576964676574026003800480"
+    }
+  ]
+}

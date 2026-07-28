@@ -1,0 +1,38 @@
+{
+  "id": "TRACT-WIRE-VEC-01",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.3",
+  "title": "Money — canonical encoding",
+  "kind": "cbor-encoding",
+  "description": "`money = { 1 => int, 2 => currency }` (§16.3). Three cases exercise the smallest, a two-byte, and a four-byte shortest-form integer encoding of `minor_units`, plus the fixed-length `currency` text string.",
+  "cases": [
+    {
+      "name": "typical amount",
+      "note": "1999 minor units needs the 2-byte uint form (0x19 + big-endian u16, since 255 < 1999 < 65536): head byte 0x19, then 0x07 0xCF (1999 = 0x07CF). Map has 2 entries -> head 0xA2. Key 1 (0x01) sorts before key 2 (0x02). 'USD' is 3 ASCII bytes -> text-string head 0x63.",
+      "input": {
+        "1": 1999,
+        "2": "USD"
+      },
+      "expected_hex": "a2011907cf0263555344"
+    },
+    {
+      "name": "zero amount",
+      "note": "0 is the single-byte uint form (head byte 0x00 itself, no argument bytes) — the shortest-form rule, not a special case for zero.",
+      "input": {
+        "1": 0,
+        "2": "ZAR"
+      },
+      "expected_hex": "a2010002635a4152"
+    },
+    {
+      "name": "amount requiring 4-byte uint form",
+      "note": "100000000 (1e8) exceeds 65535, so it takes the 4-byte form: head byte 0x1A then 4 big-endian bytes (100000000 = 0x05F5E100).",
+      "input": {
+        "1": 100000000,
+        "2": "JPY"
+      },
+      "expected_hex": "a2011a05f5e10002634a5059"
+    }
+  ]
+}

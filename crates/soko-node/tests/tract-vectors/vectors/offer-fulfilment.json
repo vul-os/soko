@@ -1,0 +1,92 @@
+{
+  "id": "TRACT-WIRE-VEC-09",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.2, §4.2",
+  "title": "Offer.Fulfilment — all 7 variants (feeds TRACT-WIRE-VEC-13's place-of-supply derivation)",
+  "kind": "cbor-encoding",
+  "description": "`Fulfilment` (§16.5.2): ship / collect / digital-grant / perform-at-place / perform-remote / access-grant (x2) / return-required.",
+  "cases": [
+    {
+      "name": "ship",
+      "note": "{0 => [* country]} — destinations SERVED (the offer-level set); the order-time chosen destination is a separate, order-level fact (§4.8, TRACT-WIRE-VEC-13).",
+      "input": {
+        "0": [
+          "FR",
+          "DE",
+          "ZA"
+        ]
+      },
+      "expected_hex": "a10083624652624445625a41"
+    },
+    {
+      "name": "collect",
+      "note": "{1 => PlaceRef}.",
+      "input": {
+        "1": {
+          "1": "US",
+          "2": "Portland"
+        }
+      },
+      "expected_hex": "a101a2016255530268506f72746c616e64"
+    },
+    {
+      "name": "digital-grant",
+      "note": "{2 => null}.",
+      "input": {
+        "2": null
+      },
+      "expected_hex": "a102f6"
+    },
+    {
+      "name": "perform-at-place",
+      "note": "{3 => PlaceRef} — the venue.",
+      "input": {
+        "3": {
+          "1": "FR",
+          "2": "Cannes"
+        }
+      },
+      "expected_hex": "a103a201624652026643616e6e6573"
+    },
+    {
+      "name": "perform-remote",
+      "note": "{4 => null}.",
+      "input": {
+        "4": null
+      },
+      "expected_hex": "a104f6"
+    },
+    {
+      "name": "access-grant, with place",
+      "note": "{5 => PlaceRef}.",
+      "input": {
+        "5": {
+          "1": "GB",
+          "2": "London"
+        }
+      },
+      "expected_hex": "a105a20162474202664c6f6e646f6e"
+    },
+    {
+      "name": "access-grant, without place",
+      "note": "{5 => null}.",
+      "input": {
+        "5": null
+      },
+      "expected_hex": "a105f6"
+    },
+    {
+      "name": "return-required",
+      "note": "{6 => PlaceRef, 7 => term days}.",
+      "input": {
+        "6": {
+          "1": "JP",
+          "2": "Osaka"
+        },
+        "7": 30
+      },
+      "expected_hex": "a206a201624a5002654f73616b6107181e"
+    }
+  ]
+}

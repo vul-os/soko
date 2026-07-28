@@ -1,0 +1,83 @@
+{
+  "id": "TRACT-WIRE-VEC-14",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.3",
+  "title": "RateCard — full object with two zones",
+  "kind": "cbor-encoding",
+  "description": "`RateCard = {1=>identity-key, 2=>[*country], 3=>[*Zone], 4=>dim_divisor, 5=>surcharge_pct, 6=>[*tstr] excluded_categories, 7=>ts}`; `Zone = {1=>id, 2=>[+WeightBracket], 3=>transit_days}`; `WeightBracket = {1=>max_grams, 2=>money}`. `dim_divisor` here (5000) is this vector's own example calibration value, not a value §16 mandates — see TRACT-WIRE-VEC-15 for the formula that field feeds.",
+  "cases": [
+    {
+      "name": "two-zone carrier rate card",
+      "note": "7-entry top-level map. Field 3 is a 2-element array of Zone maps, each a 3-entry map whose field 2 is itself an array of WeightBracket maps (2-entry maps containing a nested `money` map) — three levels of map nesting, each canonically key-sorted independently.",
+      "input": {
+        "1": {
+          "__bytes__": "636172726965722d696b00000000000000000000000000000000000000000000"
+        },
+        "2": [
+          "FR",
+          "DE",
+          "BE",
+          "NL"
+        ],
+        "3": [
+          {
+            "1": 1,
+            "2": [
+              {
+                "1": 1000,
+                "2": {
+                  "1": 500,
+                  "2": "EUR"
+                }
+              },
+              {
+                "1": 5000,
+                "2": {
+                  "1": 900,
+                  "2": "EUR"
+                }
+              },
+              {
+                "1": 20000,
+                "2": {
+                  "1": 1800,
+                  "2": "EUR"
+                }
+              }
+            ],
+            "3": 3
+          },
+          {
+            "1": 2,
+            "2": [
+              {
+                "1": 2000,
+                "2": {
+                  "1": 700,
+                  "2": "EUR"
+                }
+              },
+              {
+                "1": 10000,
+                "2": {
+                  "1": 1300,
+                  "2": "EUR"
+                }
+              }
+            ],
+            "3": 5
+          }
+        ],
+        "4": 5000,
+        "5": 3,
+        "6": [
+          "hazmat",
+          "live-animals"
+        ],
+        "7": 1755000000000
+      },
+      "expected_hex": "a7015820636172726965722d696b000000000000000000000000000000000000000000000284624652624445624245624e4c0382a301010283a2011903e802a2011901f40263455552a20119138802a2011903840263455552a201194e2002a20119070802634555520303a301020282a2011907d002a2011902bc0263455552a20119271002a2011905140263455552030504191388050306826668617a6d61746c6c6976652d616e696d616c73071b000001989e26ce00"
+    }
+  ]
+}

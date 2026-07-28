@@ -1,0 +1,40 @@
+{
+  "id": "TRACT-WIRE-VEC-04",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.1",
+  "title": "IdentityRung — the three union variants, individually encoded",
+  "kind": "cbor-encoding",
+  "description": "`IdentityRung = ContentAddressRung / ClaimedExternalRung / ManufacturerSignedRung`. The three are structurally disjoint by key-set alone: ContentAddressRung has only key 0; ManufacturerSignedRung has only key 2 (value type `identity-key`, i.e. CBOR byte string); ClaimedExternalRung has both keys 1 and 2 (value type `tstr`, i.e. CBOR text string) — so a decoder can disambiguate from map size plus the CBOR major type at key 2, with no extra tag needed. This vector does not attempt the 'weakest first' ORDERING §16.5.1 field 4 asks for across a real ProductRecord's identity ladder — the text names which rung is weakest only by describing ClaimedExternalRung as 'a claim and nothing more... UNVERIFIED' (§16.5.1), and does not give a total order across all three, so composing a multi-rung ladder is left to a future vector rather than guessed at here.",
+  "cases": [
+    {
+      "name": "ContentAddressRung",
+      "note": "Single-entry map, key 0, value is a placeholder content-address (32 bytes).",
+      "input": {
+        "0": {
+          "__bytes__": "636f6e74656e74616464722d72756e6700000000000000000000000000000000"
+        }
+      },
+      "expected_hex": "a1005820636f6e74656e74616464722d72756e6700000000000000000000000000000000"
+    },
+    {
+      "name": "ClaimedExternalRung",
+      "note": "Two-entry map, keys 1 (scheme, 'gtin') and 2 (value, the claimed GTIN as text) — both text strings, distinguishing this from ManufacturerSignedRung's single byte-string key 2.",
+      "input": {
+        "1": "gtin",
+        "2": "00012345678905"
+      },
+      "expected_hex": "a201646774696e026e3030303132333435363738393035"
+    },
+    {
+      "name": "ManufacturerSignedRung",
+      "note": "Single-entry map, key 2, value is a placeholder identity-key (32 bytes) — a CBOR byte string, not a text string, at the same key ClaimedExternalRung uses for a text value.",
+      "input": {
+        "2": {
+          "__bytes__": "6272616e642d696b000000000000000000000000000000000000000000000000"
+        }
+      },
+      "expected_hex": "a10258206272616e642d696b000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

@@ -42,6 +42,35 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+  tract-vector-drift:
+    # The conformance vectors are vendored (crates/soko-node/tests/tract-vectors/), so the `test`
+    # job above verifies Soko against them with no network and no second checkout — that is the
+    # point of vendoring and it must stay true. This job checks the other direction, which a
+    # vendored copy cannot check for itself: that the copy still matches what the spec publishes.
+    #
+    # The spec checkout is best-effort on purpose. If vul-os/kotva is unavailable, this job says so
+    # and passes: nothing in this repository builds, tests or ships any less because a different
+    # repository was unreachable (kotva/coordinator/CONTRACT.md — no shared thing is load-bearing).
+    # Where the checkout does succeed, SOKO_REQUIRE_TRACT_VECTORS=1 makes a silent skip impossible.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: soko }
+      - uses: actions/checkout@v4
+        continue-on-error: true
+        with: { repository: vul-os/kotva, path: kotva }
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with: { workspaces: soko }
+      - run: |
+          if [ -d kotva/profiles/tract/conformance/vectors ]; then
+            cd soko
+            SOKO_REQUIRE_TRACT_VECTORS=1 cargo test -p soko-node --test conformance \
+              vendored_corpus_matches_the_upstream_spec_checkout
+          else
+            echo "::warning::the TRACT spec repository could not be checked out, so the vendored vectors were NOT compared against upstream in this run. Soko's own conformance checks still ran in the test job above — they read the vendored copies."
+          fi
+
   seam-has-no-dependencies:
     # The seam's whole purpose is that implementing it costs nothing. A dependency added here is
     # inherited by everyone who wires their own payment provider, so this is a CI gate rather than

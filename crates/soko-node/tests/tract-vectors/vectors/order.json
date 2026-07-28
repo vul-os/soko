@@ -1,0 +1,50 @@
+{
+  "id": "TRACT-WIRE-VEC-19",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.6",
+  "title": "Order — sealed object, two lines, one seller",
+  "kind": "cbor-encoding",
+  "description": "`Order = {1=>buyer, 2=>seller, 3=>[+OrderLine], 4=>total money, 5=>OrderState, 6=>placed ts}`; `OrderLine = {1=>offer content-address, 2=>seller identity-key, 3=>quantity}`. §16.6: 'Order names a single seller and carries only that seller's lines' — both order lines' key-2 seller value equals the Order's own key-2 seller, demonstrating the one-seller-per-order shape rather than asserting a rule the encoder itself enforces (nothing in the CDDL forces the two to match; that is a semantic invariant, noted here rather than silently assumed).",
+  "cases": [
+    {
+      "name": "two-line order, state=placed(1)",
+      "note": "6-entry top-level map; field 3 is a 2-element array of OrderLine (3-entry) maps. `OrderState` (key 5) is the plain integer 1 ('placed', §16.6's ordering: 0=draft/1=placed/2=accepted/.../8=cancelled).",
+      "input": {
+        "1": {
+          "__bytes__": "62757965722d696b000000000000000000000000000000000000000000000000"
+        },
+        "2": {
+          "__bytes__": "73656c6c65722d696b0000000000000000000000000000000000000000000000"
+        },
+        "3": [
+          {
+            "1": {
+              "__bytes__": "6f666665722d312d616464720000000000000000000000000000000000000000"
+            },
+            "2": {
+              "__bytes__": "73656c6c65722d696b0000000000000000000000000000000000000000000000"
+            },
+            "3": 2
+          },
+          {
+            "1": {
+              "__bytes__": "6f666665722d322d616464720000000000000000000000000000000000000000"
+            },
+            "2": {
+              "__bytes__": "73656c6c65722d696b0000000000000000000000000000000000000000000000"
+            },
+            "3": 1
+          }
+        ],
+        "4": {
+          "1": 8000,
+          "2": "EUR"
+        },
+        "5": 1,
+        "6": 1755000000000
+      },
+      "expected_hex": "a601582062757965722d696b00000000000000000000000000000000000000000000000002582073656c6c65722d696b00000000000000000000000000000000000000000000000382a30158206f666665722d312d61646472000000000000000000000000000000000000000002582073656c6c65722d696b00000000000000000000000000000000000000000000000302a30158206f666665722d322d61646472000000000000000000000000000000000000000002582073656c6c65722d696b0000000000000000000000000000000000000000000000030104a201191f4002634555520501061b000001989e26ce00"
+    }
+  ]
+}

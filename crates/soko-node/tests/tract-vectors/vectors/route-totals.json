@@ -1,0 +1,53 @@
+{
+  "id": "TRACT-WIRE-VEC-16",
+  "suite_ids": [
+    "TRACT-DELIV-03"
+  ],
+  "coverage": "full",
+  "section": "§16.7, §8.2",
+  "title": "Route totals — same-currency sum, mixed-currency refusal (TRACT-DELIV-03)",
+  "kind": "derived-value",
+  "description": "§16.7: 'Arithmetic across currencies is refused, never coerced. A silently converted total is a wrong total that looks right, and it gets carried into an order.' TRACT-DELIV-03 asserts exactly this at the route-total level: a mismatch is surfaced explicitly, never summed as if the units were the same. Each leg here is represented as {2 => minor_units, 3 => currency} for brevity (a leg's own full shape, e.g. carrier + zone + money, is not yet given a name in §16's text as read; only the money components that matter to this arithmetic are used).",
+  "formula": "route_total",
+  "cases": [
+    {
+      "name": "two legs, same currency -> summed",
+      "note": "1200 + 850 = 2050 minor units, both USD -> a single money total, no conversion needed or performed.",
+      "input": [
+        {
+          "2": 1200,
+          "3": "USD"
+        },
+        {
+          "2": 850,
+          "3": "USD"
+        }
+      ],
+      "expected": {
+        "refused": false,
+        "total": {
+          "1": 2050,
+          "2": "USD"
+        }
+      }
+    },
+    {
+      "name": "two legs, different currencies -> refused",
+      "note": "USD and EUR cannot be summed into one `money` value (§16.3: money is ONE minor_units integer and ONE currency, not a multi-currency amount). Per §16.7 this is refused and disclosed as a refusal, not silently narrowed to one leg's currency or converted at an invented rate.",
+      "input": [
+        {
+          "2": 1200,
+          "3": "USD"
+        },
+        {
+          "2": 700,
+          "3": "EUR"
+        }
+      ],
+      "expected": {
+        "refused": true,
+        "reason": "currency mismatch across legs: ['EUR', 'USD'] — §16.7: arithmetic across currencies is refused, never coerced; no conversion rate is invented"
+      }
+    }
+  ]
+}

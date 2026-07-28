@@ -156,7 +156,7 @@ happened to do.
 | `soko-gateway` | §12 | storefront binding and the origin-isolation rule |
 | `soko-node` | — | the node binary |
 
-The whole protocol surface has a home, and **104 tests** cover the parts where getting it wrong is
+The whole protocol surface has a home, and **124 tests** cover the parts where getting it wrong is
 silent: volumetric weight, currency mismatch, escrow scope intersection, place of supply for an
 event held abroad, concurrent replicas not overselling, and unattested reviews not moving a score.
 
@@ -175,9 +175,16 @@ identical between the two trades — only the place of supply differs, and that 
 the escrow operator to have to refuse one of them.**
 
 ```sh
-cargo test --workspace     # 104 tests
+cargo test --workspace     # 124 tests, 1 ignored (the re-vendoring maintenance action)
 cargo tree -p soko-seam    # must stay one line — a dep here is inherited by every implementor
 ```
+
+Twenty-one of those tests' cases are the TRACT conformance vectors — hand-derived from the
+specification text, never exported from this code, and vendored into
+[`crates/soko-node/tests/tract-vectors/`](crates/soko-node/tests/tract-vectors/) with a digest over
+every file. They run in a bare checkout with no network and no second repository, which is the
+whole point: a conformance check that only runs where the spec happens to be sitting next door is a
+conformance check that reports `ok` and verified nothing.
 
 ## Help wanted
 

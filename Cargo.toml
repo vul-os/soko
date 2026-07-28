@@ -18,7 +18,10 @@ members = [
 
 # Every crate covers one part of the protocol. They exist and compile; the depth behind each
 # type varies by how far its TRACT section has been specified, and each crate's docs say so.
-# Dependency direction is fixed: everything depends on soko-seam, soko-seam depends on nothing.
+# Dependency direction is fixed: soko-seam depends on nothing, and a crate depends on it where it
+# uses it — today only soko-settle, which converts to and from the seam's RailClass. Declaring the
+# dependency in crates that never name it did not fix the direction any harder than CI's
+# `seam-has-no-dependencies` job does, so those three declarations are gone.
 
 [workspace.package]
 version = "0.1.0"

@@ -1,0 +1,32 @@
+{
+  "_": "Provenance for the vendored TRACT conformance vectors in ./vectors/. Recomputed by tests/conformance.rs::refresh_vendored_tract_vectors; checked by tests/conformance.rs::vendored_corpus_matches_its_provenance.",
+  "corpus_digest": "a3e16b0eacee2cc6b9c8577aa5cb4d2ea845cd5efcc5641b7db95abe21eca560",
+  "digest": "BLAKE3, hex. corpus_digest hashes, for each file in name order: the file name, a 0x00 separator, then the file's bytes.",
+  "files": {
+    "attribute.json": "6b5263ff2212eeda4754d3fbe1c057b0c4de1ca94daa619c62f489f5bebedd6b",
+    "billable-weight-and-local-rate-card-price-lookup-tract-deliv-01.json": "8fd3d5b3f9ad0819c63c6f3904bbc055a5c2ae576319313e57ea95a73d686ed1",
+    "escrowscope-checkout-intersection.json": "7e0a84a369f6ea258dcdf1cb143f6d4c75cd9432820908431cb57aeeffb7da6b",
+    "escrowscope.json": "b92139a72e39f4b85c9b7edbdd662808c6729206f2a4ab37e09db7168c4a82ca",
+    "identityrung.json": "a765d252cdd1906fe695c43124109e8a027c90153250896d5539f63e5fcb285d",
+    "money.json": "0839930455abd0dfb6da603a6e1887dea0742c4515070323993e4befc48c23b0",
+    "offer-availability.json": "d6d0d2d5efd50aa532d24ca2940d5dfa71cf902703ee8b7c75dc737655f46148",
+    "offer-consideration.json": "98567c2f789e04393c5fe100192eee211325d172e4eede93e97e85c5563e656b",
+    "offer-fulfilment.json": "2c3664d42b2c825bd3e638efad8456e979e885cf2631694394f74955c1b97a74",
+    "offer-item.json": "8c740e7bcf712596cdf1f1f30d66a09e61a822ecc6c3d022a8c4477bd8aa5c63",
+    "offer-missing-an-axis-is-structurally-rejected-tract-cat-03.json": "2ef06839c321469b7f17e9bf9b26d56b97d4b9830fb3fed33b32d0e3e36d1006",
+    "offer.json": "df3436a211c494122ed7ad14f47ff768eb8afe77b44834b25cc5f46a914762dd",
+    "order.json": "44c83d64b8e56eecd24905f24c61e7d2acb8412eaddc4a19dd5a1d0199f83929",
+    "paymentattestation.json": "8bc8c64d46d6b42eb99ae9ee42f6da0b97e8c3c57015a7f22afd79ec7054d6ea",
+    "place-of-supply-derivation-for-all-7-fulfilment-variants-tract-fulf-01-tract-fulf-02.json": "1f7980f9c2289e373811c55b3736f56d666ca6e6a3a98bd026bbda6bc5ea4824",
+    "placeref.json": "9ee58227cc33c57abc0d84c8e64fcde6801ebf7907c75187c9c4fb8ed537888e",
+    "productrecord-canonical-byte-convergence-and-divergence-tract-cat-01-partial.json": "f295a4d853813fafc22567d22571802e637d56f56e086d785935bb29e7f5421d",
+    "productrecord.json": "c5898ae15dba11a5c22e5d650b82ebd14768743573f6d561805bd0bb451c4624",
+    "ratecard.json": "0bb1e115f592ba4ed9822017af3cdf8c01cd251ee1eda39e9053c9a26eccce62",
+    "review.json": "e503493a85072ec7bbf7c8cc93166713f6846a5d463b2f39564d69f2ab649ddd",
+    "route-totals.json": "159b6468842e21a38325c67626da11289e5bb2cccdf4158668e5d1e1f457c9b5"
+  },
+  "licence": "CC BY 4.0 — the TRACT specification and its conformance corpus (see profiles/tract/LICENSE.md upstream).",
+  "upstream_commit": "585a8b171424dff44b20da4fb1876aee3aeb1631",
+  "upstream_path": "profiles/tract/conformance/vectors",
+  "upstream_repo": "https://github.com/vul-os/kotva"
+}

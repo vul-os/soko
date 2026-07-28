@@ -9,7 +9,6 @@ repository.workspace = true
 authors.workspace = true
 
 [dependencies]
-soko-seam = { path = "../soko-seam" }
 serde.workspace = true
 ciborium.workspace = true
 thiserror.workspace = true

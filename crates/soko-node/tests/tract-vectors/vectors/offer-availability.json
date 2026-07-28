@@ -1,0 +1,85 @@
+{
+  "id": "TRACT-WIRE-VEC-08",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.2",
+  "title": "Offer.Availability — StockSignal's 4 sub-variants plus Availability's other 4 variants",
+  "kind": "cbor-encoding",
+  "description": "`Availability = {0=>StockSignal} / {1,2 time-slots} / {3,4 capacity-per-interval} / {5=>null unlimited} / {6=>uint made-to-order}`, and `StockSignal = {0=>uint} / {1=>null} / {2=>null} / {3=>null}` (exact / in-stock / low / out-of-stock).",
+  "cases": [
+    {
+      "name": "stock: exact(42)",
+      "note": "Availability{0 => StockSignal{0 => 42}} — nested map, outer key 0, inner key 0.",
+      "input": {
+        "0": {
+          "0": 42
+        }
+      },
+      "expected_hex": "a100a100182a"
+    },
+    {
+      "name": "stock: in-stock",
+      "note": "Availability{0 => StockSignal{1 => null}}.",
+      "input": {
+        "0": {
+          "1": null
+        }
+      },
+      "expected_hex": "a100a101f6"
+    },
+    {
+      "name": "stock: low",
+      "note": "Availability{0 => StockSignal{2 => null}}.",
+      "input": {
+        "0": {
+          "2": null
+        }
+      },
+      "expected_hex": "a100a102f6"
+    },
+    {
+      "name": "stock: out-of-stock",
+      "note": "Availability{0 => StockSignal{3 => null}}.",
+      "input": {
+        "0": {
+          "3": null
+        }
+      },
+      "expected_hex": "a100a103f6"
+    },
+    {
+      "name": "time-slots",
+      "note": "Availability{1 => RFC 5545 payload, 2 => slot minutes}.",
+      "input": {
+        "1": "FREQ=WEEKLY;BYDAY=MO,WE,FR",
+        "2": 60
+      },
+      "expected_hex": "a201781a465245513d5745454b4c593b42594441593d4d4f2c57452c465202183c"
+    },
+    {
+      "name": "capacity-per-interval",
+      "note": "Availability{3 => capacity, 4 => RFC 5545 recurrence}.",
+      "input": {
+        "3": 20,
+        "4": "FREQ=DAILY"
+      },
+      "expected_hex": "a20314046a465245513d4441494c59"
+    },
+    {
+      "name": "unlimited",
+      "note": "Availability{5 => null}.",
+      "input": {
+        "5": null
+      },
+      "expected_hex": "a105f6"
+    },
+    {
+      "name": "made-to-order",
+      "note": "Availability{6 => lead days}.",
+      "input": {
+        "6": 14
+      },
+      "expected_hex": "a1060e"
+    }
+  ]
+}

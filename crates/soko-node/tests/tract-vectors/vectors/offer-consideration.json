@@ -1,0 +1,99 @@
+{
+  "id": "TRACT-WIRE-VEC-10",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.2",
+  "title": "Offer.Consideration — all 6 variants, including the PriceTier array",
+  "kind": "cbor-encoding",
+  "description": "`Consideration` (§16.5.2): fixed / tiered / recurring / metered / deposit+balance / quote-required.",
+  "cases": [
+    {
+      "name": "fixed",
+      "note": "{0 => money}.",
+      "input": {
+        "0": {
+          "1": 2500,
+          "2": "USD"
+        }
+      },
+      "expected_hex": "a100a2011909c40263555344"
+    },
+    {
+      "name": "tiered / volume",
+      "note": "{1 => [+ PriceTier]}; `PriceTier = {1 => min_qty, 2 => unit_price}`. Array order here is the tier ordering as published — §16 does not state that tiers must be sorted by min_qty, only that the array is non-empty (`[+ ...]`), so this vector keeps them in ascending min_qty as the natural publication order without asserting that CBOR or the spec requires it.",
+      "input": {
+        "1": [
+          {
+            "1": 1,
+            "2": {
+              "1": 1000,
+              "2": "USD"
+            }
+          },
+          {
+            "1": 10,
+            "2": {
+              "1": 900,
+              "2": "USD"
+            }
+          },
+          {
+            "1": 100,
+            "2": {
+              "1": 750,
+              "2": "USD"
+            }
+          }
+        ]
+      },
+      "expected_hex": "a10183a2010102a2011903e80263555344a2010a02a2011903840263555344a201186402a2011902ee0263555344"
+    },
+    {
+      "name": "recurring",
+      "note": "{2 => money, 3 => RFC 5545 RRULE}.",
+      "input": {
+        "2": {
+          "1": 999,
+          "2": "USD"
+        },
+        "3": "FREQ=MONTHLY;INTERVAL=1"
+      },
+      "expected_hex": "a202a2011903e702635553440377465245513d4d4f4e54484c593b494e54455256414c3d31"
+    },
+    {
+      "name": "metered",
+      "note": "{4 => dimension, 5 => unit price}.",
+      "input": {
+        "4": "api-calls",
+        "5": {
+          "1": 1,
+          "2": "USD"
+        }
+      },
+      "expected_hex": "a204696170692d63616c6c7305a201010263555344"
+    },
+    {
+      "name": "deposit + balance",
+      "note": "{6 => deposit money, 7 => balance money}.",
+      "input": {
+        "6": {
+          "1": 5000,
+          "2": "USD"
+        },
+        "7": {
+          "1": 15000,
+          "2": "USD"
+        }
+      },
+      "expected_hex": "a206a201191388026355534407a201193a980263555344"
+    },
+    {
+      "name": "quote-required (RFQ)",
+      "note": "{8 => null}.",
+      "input": {
+        "8": null
+      },
+      "expected_hex": "a108f6"
+    }
+  ]
+}

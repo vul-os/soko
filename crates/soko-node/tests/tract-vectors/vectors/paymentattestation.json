@@ -1,0 +1,34 @@
+{
+  "id": "TRACT-WIRE-VEC-20",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.6",
+  "title": "PaymentAttestation — canonical encoding",
+  "kind": "cbor-encoding",
+  "description": "`PaymentAttestation = {1=>payer, 2=>payee, 3=>order content-address, 4=>money, 5=>RailClass, 6=>opaque external reference, 7=>ts}`. §16.6: 'carries a reference, never funds and never card data.'",
+  "cases": [
+    {
+      "name": "custodial-reversible rail attestation",
+      "note": "7-entry map, keys 1-7 ascending. `RailClass` (key 5) is the plain integer 0 (custodial-reversible, §16.5.4). Key 6 is an opaque external settlement reference — just a `tstr`, not parsed or validated by the wire format.",
+      "input": {
+        "1": {
+          "__bytes__": "70617965722d696b000000000000000000000000000000000000000000000000"
+        },
+        "2": {
+          "__bytes__": "70617965652d696b000000000000000000000000000000000000000000000000"
+        },
+        "3": {
+          "__bytes__": "6f726465722d6164647200000000000000000000000000000000000000000000"
+        },
+        "4": {
+          "1": 4500,
+          "2": "EUR"
+        },
+        "5": 0,
+        "6": "stripe:pi_3Nx000000000000opaque",
+        "7": 1755000000000
+      },
+      "expected_hex": "a701582070617965722d696b00000000000000000000000000000000000000000000000002582070617965652d696b0000000000000000000000000000000000000000000000000358206f726465722d616464720000000000000000000000000000000000000000000004a2011911940263455552050006781f7374726970653a70695f334e783030303030303030303030306f7061717565071b000001989e26ce00"
+    }
+  ]
+}

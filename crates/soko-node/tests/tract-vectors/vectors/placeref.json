@@ -1,0 +1,29 @@
+{
+  "id": "TRACT-WIRE-VEC-02",
+  "suite_ids": [],
+  "coverage": null,
+  "section": "§16.5.2",
+  "title": "PlaceRef — canonical encoding",
+  "kind": "cbor-encoding",
+  "description": "`PlaceRef = { 1 => country, 2 => tstr }` — country plus a coarse locality, explicitly never a street address (§16.4).",
+  "cases": [
+    {
+      "name": "venue example",
+      "note": "Two-entry map, keys already in ascending order (1, 2). `country` is a fixed 2-byte ISO 3166-1 alpha-2 text string; `locality` is free text — note there is no third field this object COULD carry a street address in (§16.4).",
+      "input": {
+        "1": "FR",
+        "2": "Paris, 8th arrondissement"
+      },
+      "expected_hex": "a20162465202781950617269732c20387468206172726f6e64697373656d656e74"
+    },
+    {
+      "name": "pickup point example",
+      "note": "Same shape, different values, to show the encoding is not hard-coded to one string length.",
+      "input": {
+        "1": "US",
+        "2": "Springfield"
+      },
+      "expected_hex": "a201625553026b537072696e676669656c64"
+    }
+  ]
+}

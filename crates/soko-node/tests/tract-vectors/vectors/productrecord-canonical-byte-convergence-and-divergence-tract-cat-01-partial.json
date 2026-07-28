@@ -1,0 +1,91 @@
+{
+  "id": "TRACT-WIRE-VEC-06",
+  "suite_ids": [
+    "TRACT-CAT-01"
+  ],
+  "coverage": "partial",
+  "section": "§16.5.1, §2.2, §16.2",
+  "title": "ProductRecord canonical-byte convergence and divergence (TRACT-CAT-01, partial)",
+  "kind": "cbor-encoding",
+  "description": "TRACT-CAT-01 asserts that two independently-published ProductRecords converging on identical canonical bytes converge on the identical CONTENT ADDRESS, and that records differing before canonicalisation do not silently collide. The content address itself is `multihash-style prefix || digest` over those canonical bytes (§16.3, 'substrate §18.1.5') — the hash construction is substrate-defined and out of scope here (§16.2: TRACT introduces no new hash construction). What IS computable from §16 alone, and is the precondition the address-convergence claim depends on, is that canonical CBOR encoding is independent of the field-insertion order a publisher happened to use, and that a genuine content difference produces different bytes. This vector proves exactly that precondition, and no more — see vectors/README.md for why TRACT-CAT-01 is marked PARTIAL rather than covered.",
+  "cases": [
+    {
+      "name": "same content, keys inserted ascending vs descending -> identical bytes",
+      "note": "r1's dict is built inserting keys 1,2,3,4 in that order; r2's dict is built inserting the SAME key/value pairs in order 4,3,2,1. Because the canonical encoder sorts map entries by encoded key before emitting them (§16.2), both produce byte-for-byte identical output regardless of how each dict was built.",
+      "input_a": {
+        "1": "Wireless Optical Mouse",
+        "2": "2.4GHz wireless optical mouse",
+        "3": [
+          {
+            "1": "color",
+            "2": "black"
+          }
+        ],
+        "4": [
+          {
+            "1": "gtin",
+            "2": "00012345678905"
+          }
+        ]
+      },
+      "input_b": {
+        "4": [
+          {
+            "1": "gtin",
+            "2": "00012345678905"
+          }
+        ],
+        "3": [
+          {
+            "1": "color",
+            "2": "black"
+          }
+        ],
+        "2": "2.4GHz wireless optical mouse",
+        "1": "Wireless Optical Mouse"
+      },
+      "expected_hex_a": "a40176576972656c657373204f70746963616c204d6f75736502781d322e3447487a20776972656c657373206f70746963616c206d6f7573650381a20165636f6c6f720265626c61636b0481a201646774696e026e3030303132333435363738393035",
+      "expected_hex_b": "a40176576972656c657373204f70746963616c204d6f75736502781d322e3447487a20776972656c657373206f70746963616c206d6f7573650381a20165636f6c6f720265626c61636b0481a201646774696e026e3030303132333435363738393035",
+      "expect_equal": true
+    },
+    {
+      "name": "different description -> different bytes",
+      "note": "r3 is r1 with field 2 (description) changed. The encoded map differs at the bytes for key 2's value, so the two outputs are NOT equal — a genuine content difference does not collide.",
+      "input_a": {
+        "1": "Wireless Optical Mouse",
+        "2": "2.4GHz wireless optical mouse",
+        "3": [
+          {
+            "1": "color",
+            "2": "black"
+          }
+        ],
+        "4": [
+          {
+            "1": "gtin",
+            "2": "00012345678905"
+          }
+        ]
+      },
+      "input_b": {
+        "1": "Wireless Optical Mouse",
+        "2": "a different description",
+        "3": [
+          {
+            "1": "color",
+            "2": "black"
+          }
+        ],
+        "4": [
+          {
+            "1": "gtin",
+            "2": "00012345678905"
+          }
+        ]
+      },
+      "expected_hex_a": "a40176576972656c657373204f70746963616c204d6f75736502781d322e3447487a20776972656c657373206f70746963616c206d6f7573650381a20165636f6c6f720265626c61636b0481a201646774696e026e3030303132333435363738393035",
+      "expected_hex_b": "a40176576972656c657373204f70746963616c204d6f75736502776120646966666572656e74206465736372697074696f6e0381a20165636f6c6f720265626c61636b0481a201646774696e026e3030303132333435363738393035",
+      "expect_equal": false
+    }
+  ]
+}

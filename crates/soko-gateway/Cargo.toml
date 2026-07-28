@@ -14,7 +14,6 @@ path = "src/bin/storefront.rs"
 
 [dependencies]
 soko-core = { path = "../soko-core" }
-soko-seam = { path = "../soko-seam" }
 soko-catalog = { path = "../soko-catalog" }
 soko-offer = { path = "../soko-offer" }
 soko-delivery = { path = "../soko-delivery" }
