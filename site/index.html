@@ -11,6 +11,7 @@
   --bg:#09090B; --bg-soft:#0E0E10; --panel:#131316; --panel-2:#18181B;
   --border:rgba(255,255,255,.08); --border-2:rgba(255,255,255,.13);
   --text:#FAFAFA; --muted:#A1A1AA; --faint:#71717A;
+  --inline-code-bg:rgba(255,255,255,.06);
   --radius:16px; --max:1120px;
   --mono:ui-monospace,SFMono-Regular,"SF Mono","Geist Mono",Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
@@ -24,7 +25,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:
 a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
-.accent{color:var(--accent)}
+.accent{color:var(--accent-ink)}
 
 /* Header */
 .site-header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 72%, transparent);border-bottom:1px solid var(--border)}
@@ -32,7 +33,7 @@ img{max-width:100%;display:block}
 .brand{display:flex;align-items:center;gap:11px;font-weight:600;font-size:18px;letter-spacing:-.03em}
 .brand .tile{width:34px;height:34px;border-radius:9px;overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,.12) inset, 0 4px 14px rgba(0,0,0,.35)}
 .brand .tile img{width:100%;height:100%;object-fit:contain}
-.brand .slash{color:var(--accent)}
+.brand .slash{color:var(--accent-ink)}
 .nav-spacer{flex:1}
 .nav-links{display:flex;align-items:center;gap:22px}
 .nav-links a{color:var(--muted);font-size:14.5px;font-weight:500;transition:color .15s}
@@ -52,7 +53,7 @@ img{max-width:100%;display:block}
 
 /* Hero */
 .hero{padding:84px 0 56px}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%, transparent);border:1px solid color-mix(in srgb,var(--accent) 28%, transparent);padding:6px 13px;border-radius:999px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--accent-ink);background:color-mix(in srgb,var(--accent) 10%, transparent);border:1px solid color-mix(in srgb,var(--accent) 28%, transparent);padding:6px 13px;border-radius:999px}
 .hero .wordmark{margin:26px 0 0;height:clamp(48px,8vw,76px);width:auto}
 .hero .tagline{font-size:clamp(18px,2.4vw,23px);color:var(--text);margin:18px 0 0;max-width:720px;font-weight:500}
 .hero .blurb{font-size:16.5px;color:var(--muted);margin:18px 0 0;max-width:660px}
@@ -75,7 +76,7 @@ img{max-width:100%;display:block}
 .card .dot::after{content:"";width:11px;height:11px;border-radius:3px;background:var(--accent)}
 .card h3{margin:0 0 8px;font-size:17.5px;letter-spacing:-.01em}
 .card p{margin:0;color:var(--muted);font-size:14.5px}
-.card code{font-family:var(--mono);font-size:.86em;background:rgba(255,255,255,.06);padding:1px 5px;border-radius:5px;color:var(--text)}
+.card code{font-family:var(--mono);font-size:.86em;background:var(--inline-code-bg);padding:1px 5px;border-radius:5px;color:var(--text)}
 
 /* Quickstart */
 .quick{display:grid;grid-template-columns:1.1fr 1fr;gap:34px;align-items:center}
@@ -87,7 +88,7 @@ img{max-width:100%;display:block}
 .codeblock .c{color:var(--faint)}
 .steps{list-style:none;margin:0;padding:0;display:grid;gap:16px}
 .steps li{display:flex;gap:14px;align-items:flex-start}
-.steps .num{flex:none;width:28px;height:28px;border-radius:8px;background:color-mix(in srgb,var(--accent) 13%, transparent);border:1px solid color-mix(in srgb,var(--accent) 32%, transparent);color:var(--accent);font-weight:700;display:grid;place-items:center;font-size:14px}
+.steps .num{flex:none;width:28px;height:28px;border-radius:8px;background:color-mix(in srgb,var(--accent) 13%, transparent);border:1px solid color-mix(in srgb,var(--accent) 32%, transparent);color:var(--accent-ink);font-weight:700;display:grid;place-items:center;font-size:14px}
 .steps b{display:block;font-size:15.5px}
 .steps span{color:var(--muted);font-size:14px}
 
@@ -97,7 +98,7 @@ img{max-width:100%;display:block}
 .decent .cols{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:28px}
 @media(max-width:820px){.decent .cols{grid-template-columns:1fr}}
 .decent h4{margin:0 0 6px;font-size:16px;letter-spacing:-.01em}
-.decent h4::before{content:"/ ";color:var(--accent);font-weight:700}
+.decent h4::before{content:"/ ";color:var(--accent-ink);font-weight:700}
 .decent p{margin:0;color:var(--muted);font-size:14.5px}
 
 /* Vulos band */
@@ -106,7 +107,7 @@ img{max-width:100%;display:block}
 .vulos-band img{width:60px;height:60px;border-radius:14px;flex:none}
 .vulos-band h3{margin:0 0 6px;font-size:21px}
 .vulos-band p{margin:0;color:var(--muted);max-width:680px}
-.vulos-band .more{margin-top:14px;display:inline-flex;color:var(--accent);font-weight:600;font-size:15px}
+.vulos-band .more{margin-top:14px;display:inline-flex;color:var(--accent-ink);font-weight:600;font-size:15px}
 
 
 
@@ -119,7 +120,22 @@ img{max-width:100%;display:block}
 .foot .links a{color:var(--muted);font-size:14px}
 .foot .links a:hover{color:var(--text)}
 </style>
-<style>:root{--accent:#16D97F;--accent-2:#0FA95F}</style>
+<style>:root{--accent:#16D97F;--accent-2:#0FA95F;--accent-ink:#16D97F}</style>
+<style>
+/* Light theme — same tokens, adjusted for a light surface. --accent stays the
+   brand green for decorative fills/borders (only ~3:1 needed there); --accent-ink
+   is a darkened shade used wherever the green is the TEXT color, so it still
+   clears 4.5:1 on a light background (#16D97F on white is ~1.7:1 and would fail). */
+@media (prefers-color-scheme: light) {
+  :root{
+    --bg:#FAFAFA; --bg-soft:#F1F1F3; --panel:#FFFFFF; --panel-2:#F4F4F6;
+    --border:rgba(0,0,0,.08); --border-2:rgba(0,0,0,.13);
+    --text:#0B0B0D; --muted:#52525B; --faint:#6B6B74;
+    --accent-ink:#0A7A45;
+    --inline-code-bg:rgba(0,0,0,.06);
+  }
+}
+</style>
 </head>
 <body>
 <header class="site-header"><div class="wrap nav">
@@ -140,7 +156,10 @@ img{max-width:100%;display:block}
 <main>
   <section class="hero"><div class="wrap">
     <span class="eyebrow">Pre-alpha · Spec first · No token</span>
-    <h1 style="margin:0"><img class="wordmark" src="./assets/brand/logo-wordmark-dark.svg" alt="Soko"></h1>
+    <h1 style="margin:0"><picture>
+      <source srcset="./assets/brand/logo-wordmark-light.svg" media="(prefers-color-scheme: light)">
+      <img class="wordmark" src="./assets/brand/logo-wordmark-dark.svg" alt="Soko">
+    </picture></h1>
     <p class="tagline">Commerce without a marketplace. A keypair is a store.</p>
     <p class="blurb">Soko is the reference implementation of <a href="https://github.com/vul-os/kotva/tree/main/profiles/tract" style="color:var(--text)">TRACT</a> — an open protocol for decentralized commerce covering goods, services, rentals and subscriptions between self-sovereign identities. Your catalogue is a signed feed you publish, not rows in someone's database. Your cart lives on your own devices. Delivery is computed locally from published rate cards rather than brokered by a platform. Nobody can delist you, and leaving costs a DNS change.</p>
     <div class="cta-row">

@@ -4,9 +4,15 @@
 // crates change what an offer says, this picture changes with them — which is the only way a
 // screenshot in a README stays true.
 //
-// Usage: node tools/screenshots.mjs      (needs Chrome; CHROME_PATH overrides)
+// Usage: npm install && node tools/screenshots.mjs   (needs Chrome; CHROME_PATH overrides)
+//
+// puppeteer-core is soko's own devDependency (package.json at the repo root) — this
+// used to reach across into a sibling ../../tract checkout's node_modules, which
+// silently stopped resolving once TRACT folded into kotva as a profile (see
+// CHANGELOG.md). Fixed here rather than repointed at another sibling repo: soko
+// must not depend on any other product repo, by path or otherwise.
 
-import puppeteer from "../../tract/build/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js";
+import puppeteer from "puppeteer-core";
 import { execFileSync } from "node:child_process";
 import { writeFileSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";

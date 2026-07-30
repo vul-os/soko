@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 128" width="400" height="128" role="img" aria-label="Soko">
+  <g>
+    <path d="M56 8 L100 33 L100 83 L56 108 L12 83 L12 33 Z" fill="#16D97F"/>
+    <path d="M32 37 H80 V54
+             a8 8 0 0 1 -16 0
+             a8 8 0 0 1 -16 0
+             a8 8 0 0 1 -16 0 Z" fill="#07140E"/>
+    <rect x="34" y="65" width="10.5" height="19" rx="3" fill="#07140E"/>
+    <rect x="50.75" y="65" width="10.5" height="19" rx="3" fill="#07140E"/>
+    <rect x="67.5" y="65" width="10.5" height="19" rx="3" fill="#07140E"/>
+  </g>
+  <text x="124" y="82" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif"
+        font-size="60" font-weight="800" letter-spacing="-2.5" fill="#07140E">soko</text>
+</svg>

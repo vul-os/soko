@@ -27,6 +27,7 @@ dependency direction (`everything → soko-core → soko-seam`, fixed from the f
 cargo test --workspace                              # unit tests
 cargo clippy --workspace --all-targets -- -D warnings  # lint, warnings are errors
 cargo fmt --all -- --check                           # formatting
+npm install                                          # once, for tools/*.mjs's own puppeteer-core
 node tools/diagrams.mjs                              # regenerate docs/diagrams/*.png from source
 node tools/sync-docs.mjs                             # mirror docs/ -> site/docs/ after editing docs
 ```

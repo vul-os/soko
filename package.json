@@ -1,0 +1,8 @@
+{
+  "name": "soko-tools",
+  "private": true,
+  "description": "Dev-only tooling deps for tools/screenshots.mjs and tools/diagrams.mjs (Chrome DevTools Protocol driver). Not a runtime dependency of any crate — soko ships no JS.",
+  "devDependencies": {
+    "puppeteer-core": "^25.4.0"
+  }
+}

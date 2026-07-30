@@ -98,7 +98,7 @@ A decentralized design that hides its operator classes is lying about them.
 cargo run -p soko-gateway --bin soko-storefront -- --serve 8080
 ```
 
-<sub>Rendered by <code>soko-storefront</code> from real catalogue objects &mdash; the axis lines, the routing comparison and the review weighting are live calls into the workspace crates. <strong>Not yet a gateway:</strong> it does not fetch from a feed, verify a signature, or take an order. Regenerate with <code>node tools/screenshots.mjs</code>.</sub>
+<sub>Rendered by <code>soko-storefront</code> from real catalogue objects &mdash; the axis lines, the routing comparison and the review weighting are live calls into the workspace crates. <strong>Not yet a gateway:</strong> it does not fetch from a feed, verify a signature, or take an order. Regenerate with <code>npm install &amp;&amp; node tools/screenshots.mjs</code>.</sub>
 
 ## Diagrams
 
@@ -117,7 +117,7 @@ cargo run -p soko-gateway --bin soko-storefront -- --serve 8080
 </p>
 <p align="center"><em>Rate cards are published, so consolidation is compared locally. No quote API, and nobody learns the cart.</em></p>
 
-<sub>Regenerated from one source with <code>node tools/diagrams.mjs</code>. See <a href="docs/diagrams.md">Diagrams</a>.</sub>
+<sub>Regenerated from one source with <code>npm install &amp;&amp; node tools/diagrams.mjs</code>. See <a href="docs/diagrams.md">Diagrams</a>.</sub>
 
 ## Read the evidence before believing any of it
 

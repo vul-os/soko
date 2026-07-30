@@ -4,9 +4,15 @@
 // shot would misrepresent how far along this is. These are the real artefacts: the same mermaid
 // sources the docs render, exported so the visual slots carry something true.
 //
-// Usage: node tools/diagrams.mjs      (needs Chrome; set CHROME_PATH to override)
+// Usage: npm install && node tools/diagrams.mjs   (needs Chrome; set CHROME_PATH to override)
+//
+// puppeteer-core is soko's own devDependency (package.json at the repo root) — this
+// used to reach across into a sibling ../../tract checkout's node_modules, which
+// silently stopped resolving once TRACT folded into kotva as a profile (see
+// CHANGELOG.md). Fixed here rather than repointed at another sibling repo: soko
+// must not depend on any other product repo, by path or otherwise.
 
-import puppeteer from "../../tract/build/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js";
+import puppeteer from "puppeteer-core";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";

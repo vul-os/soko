@@ -11,6 +11,11 @@
   --bg:#09090B; --bg-soft:#0E0E10; --panel:#131316; --panel-2:#18181B;
   --border:rgba(255,255,255,.08); --border-2:rgba(255,255,255,.13);
   --text:#FAFAFA; --muted:#A1A1AA; --faint:#71717A;
+  --markdown-text:#D4D4D8;
+  --hairline-bg-1:rgba(255,255,255,.04);
+  --hairline-bg-2:rgba(255,255,255,.03);
+  --inline-code-bg:rgba(255,255,255,.07);
+  --err-text:#FCA5A5;
   --radius:16px; --max:1120px;
   --mono:ui-monospace,SFMono-Regular,"SF Mono","Geist Mono",Menlo,Consolas,monospace;
   --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
@@ -24,7 +29,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;background:
 a{color:inherit;text-decoration:none}
 img{max-width:100%;display:block}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 24px}
-.accent{color:var(--accent)}
+.accent{color:var(--accent-ink)}
 
 /* Header */
 .site-header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:color-mix(in srgb,var(--bg) 72%, transparent);border-bottom:1px solid var(--border)}
@@ -32,7 +37,7 @@ img{max-width:100%;display:block}
 .brand{display:flex;align-items:center;gap:11px;font-weight:600;font-size:18px;letter-spacing:-.03em}
 .brand .tile{width:34px;height:34px;border-radius:9px;overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,.12) inset, 0 4px 14px rgba(0,0,0,.35)}
 .brand .tile img{width:100%;height:100%;object-fit:contain}
-.brand .slash{color:var(--accent)}
+.brand .slash{color:var(--accent-ink)}
 .nav-spacer{flex:1}
 .nav-links{display:flex;align-items:center;gap:22px}
 .nav-links a{color:var(--muted);font-size:14.5px;font-weight:500;transition:color .15s}
@@ -55,9 +60,9 @@ img{max-width:100%;display:block}
 .docs-shell{display:grid;grid-template-columns:248px 1fr;gap:36px;align-items:start;padding:34px 0 70px}
 @media(max-width:860px){.docs-shell{grid-template-columns:1fr}}
 .docs-nav{position:sticky;top:84px;border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);padding:14px}
-.docs-nav .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:6px 10px}
+.docs-nav .label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:6px 10px}
 .docs-nav a{display:block;padding:8px 11px;border-radius:9px;color:var(--muted);font-size:14.5px;font-weight:500;transition:.15s}
-.docs-nav a:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.docs-nav a:hover{background:var(--hairline-bg-1);color:var(--text)}
 .docs-nav a.active{background:color-mix(in srgb,var(--accent) 14%, transparent);color:var(--text)}
 @media(max-width:860px){.docs-nav{position:static}}
 .docs-main{min-width:0}
@@ -67,13 +72,13 @@ img{max-width:100%;display:block}
 .markdown h2{font-size:25px;letter-spacing:-.02em;margin:1.6em 0 .6em;border-bottom:1px solid var(--border);padding-bottom:.25em}
 .markdown h3{font-size:19px;margin:1.4em 0 .5em}
 .markdown h4{font-size:16px;margin:1.3em 0 .4em;color:var(--text)}
-.markdown p,.markdown li{color:#D4D4D8}
-.markdown a{color:var(--accent);text-decoration:none}
+.markdown p,.markdown li{color:var(--markdown-text)}
+.markdown a{color:var(--accent-ink);text-decoration:none}
 .markdown a:hover{text-decoration:underline}
-.markdown code{font-family:var(--mono);font-size:.88em;background:rgba(255,255,255,.07);padding:2px 6px;border-radius:6px}
+.markdown code{font-family:var(--mono);font-size:.88em;background:var(--inline-code-bg);padding:2px 6px;border-radius:6px}
 .markdown pre{background:#0C0C0E;border:1px solid var(--border-2);border-radius:12px;padding:16px 18px;overflow:auto}
 .markdown pre code{background:none;padding:0;font-size:13.5px;line-height:1.7;color:#D4D4D8}
-.markdown blockquote{margin:1em 0;padding:.4em 1em;border-left:3px solid var(--accent);background:rgba(255,255,255,.03);color:var(--muted);border-radius:0 8px 8px 0}
+.markdown blockquote{margin:1em 0;padding:.4em 1em;border-left:3px solid var(--accent);background:var(--hairline-bg-2);color:var(--muted);border-radius:0 8px 8px 0}
 .markdown table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:14.5px;display:block;overflow:auto}
 .markdown th,.markdown td{border:1px solid var(--border-2);padding:9px 12px;text-align:left}
 .markdown th{background:var(--panel);font-weight:600}
@@ -81,9 +86,26 @@ img{max-width:100%;display:block}
 .markdown hr{border:none;border-top:1px solid var(--border);margin:2em 0}
 .markdown .mermaid{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin:1.2em 0;text-align:center;overflow:auto}
 .docs-title{font-size:13px;color:var(--faint);margin-bottom:6px}
-.docs-error{color:#FCA5A5;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);padding:14px 16px;border-radius:10px}
+.docs-error{color:var(--err-text);background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.25);padding:14px 16px;border-radius:10px}
 </style>
-<style>:root{--accent:#16D97F;--accent-2:#0FA95F}</style>
+<style>:root{--accent:#16D97F;--accent-2:#0FA95F;--accent-ink:#16D97F}</style>
+<style>
+/* Light theme — same tokens, adjusted for a light surface; see site/index.html
+   for the rationale (accent-ink exists so --accent-as-text still clears 4.5:1). */
+@media (prefers-color-scheme: light) {
+  :root{
+    --bg:#FAFAFA; --bg-soft:#F1F1F3; --panel:#FFFFFF; --panel-2:#F4F4F6;
+    --border:rgba(0,0,0,.08); --border-2:rgba(0,0,0,.13);
+    --text:#0B0B0D; --muted:#52525B; --faint:#6B6B74;
+    --accent-ink:#0A7A45;
+    --markdown-text:#3A3A3F;
+    --hairline-bg-1:rgba(0,0,0,.04);
+    --hairline-bg-2:rgba(0,0,0,.03);
+    --inline-code-bg:rgba(0,0,0,.06);
+    --err-text:#B91C1C;
+  }
+}
+</style>
 <script src="./assets/vendor/marked.umd.js"></script>
 <script src="./assets/vendor/mermaid.min.js"></script>
 </head>
@@ -162,7 +184,11 @@ const byFile = Object.fromEntries(DOCS.map(d=>[d.path.split('/').pop().toLowerCa
 const content = document.getElementById('content');
 const crumb = document.getElementById('crumb');
 let mermaidReady = false;
-try { mermaid.initialize({ startOnLoad:false, theme:'dark', securityLevel:'loose', themeVariables:{ fontFamily:'var(--sans)' } }); mermaidReady = true; } catch(e){}
+// Match whichever theme the page actually rendered in — the .markdown .mermaid
+// panel uses var(--panel), which flips to white under prefers-color-scheme:
+// light, so a hardcoded 'dark' mermaid theme would draw dark node fills on it.
+const mermaidTheme = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'default' : 'dark';
+try { mermaid.initialize({ startOnLoad:false, theme:mermaidTheme, securityLevel:'loose', themeVariables:{ fontFamily:'var(--sans)' } }); mermaidReady = true; } catch(e){}
 
 if (window.marked && marked.setOptions) marked.setOptions({ gfm:true, breaks:false });
 

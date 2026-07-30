@@ -87,6 +87,29 @@ and isn't there yet.
   gate. It is a Rust test so that it runs under the `cargo test --workspace` CI already gates on,
   needing no Node toolchain in the job and leaving no `if` for it to be wrapped in. It fails closed:
   a missing tree, an *empty* source tree, or an unreadable file is a failure, never a skip.
+- **`tools/screenshots.mjs` and `tools/diagrams.mjs` imported `puppeteer-core` from a sibling
+  `../../tract` checkout's `node_modules`.** Like the doc links above, this stopped resolving once
+  TRACT folded into KOTVA — but nothing had run either script since, so it went unnoticed. Fixed by
+  giving these dev-only tools their own dependency: a root `package.json` declares `puppeteer-core`
+  directly, so both scripts import the bare specifier instead of reaching into another product
+  repo's install. Soko must not depend on any other product repo, by path or otherwise, so this is
+  a standalone fix rather than a repoint at a different sibling. Ran both end to end with the fix
+  in place: `docs/diagrams/*.png` and `docs/screenshots/storefront*.png` regenerate correctly.
+- **The site had no light theme** — `site/index.html` and `site/docs.html` hardcoded the dark
+  palette in `:root`, with no `prefers-color-scheme: light` override anywhere. The brand assets
+  already anticipated this (`assets/logo-wordmark.svg` is a dark-ink variant for light
+  backgrounds, sitting unused next to the light-ink `-dark` one actually wired into the hero), so
+  this was a real gap rather than a deliberate dark-only design. Added light-theme token overrides
+  for both pages, a light copy of the wordmark at `site/assets/brand/logo-wordmark-light.svg`
+  (copied from the existing `assets/logo-wordmark.svg`, not redrawn) swapped in via
+  `<picture>`/`prefers-color-scheme`, and a `--accent-ink` token distinct from the decorative
+  `--accent` — the brand green is ~1.7:1 on a light background as text (fails the WCAG AA text
+  floor of 4.5:1), so anywhere it was used as a text color now reads a darkened shade
+  (`#0A7A45`, ~5:1) instead; backgrounds/borders keep the true brand green, where only the ~3:1
+  non-text floor applies. `docs.html`'s mermaid init also hardcoded `theme:'dark'`, which would
+  have drawn dark diagram fills on the now-white `.markdown .mermaid` panel; it now matches
+  whichever scheme the page actually rendered in.
+- `.docs-nav .label` was 11px, one pixel under the 12px floor the rest of the type scale holds to.
 
 ### Known limits at this stage
 
