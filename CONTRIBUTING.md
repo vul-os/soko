@@ -1,7 +1,8 @@
 # Contributing to Soko
 
-Soko is the reference implementation of [TRACT](https://github.com/vul-os/tract). All contributions
-are under the [MIT licence](LICENSE).
+Soko is the reference implementation of
+[TRACT](https://github.com/vul-os/kotva/tree/main/profiles/tract). All contributions are under the
+[MIT licence](LICENSE).
 
 ## Before anything structural: spec-first discipline
 
@@ -12,8 +13,9 @@ practical consequence for this repository:
 **Where Soko and the specification disagree, the specification wins.** If you find TRACT
 unimplementable — a check that can't be expressed, a type that doesn't fit a real case — that is a
 defect in the spec, not licence to quietly diverge here. Raise it as an issue on
-[tract](https://github.com/vul-os/tract), and reference it from the PR. Do not paper over an
-unimplementable section by implementing something adjacent to it.
+[vul-os/kotva](https://github.com/vul-os/kotva/issues) against the
+[TRACT profile](https://github.com/vul-os/kotva/tree/main/profiles/tract), and reference it from the
+PR. Do not paper over an unimplementable section by implementing something adjacent to it.
 
 Read [docs/architecture.md](docs/architecture.md) before changing anything structural. The
 dependency direction (`everything → soko-core → soko-seam`, fixed from the first commit) and the
@@ -26,13 +28,26 @@ cargo test --workspace                              # unit tests
 cargo clippy --workspace --all-targets -- -D warnings  # lint, warnings are errors
 cargo fmt --all -- --check                           # formatting
 node tools/diagrams.mjs                              # regenerate docs/diagrams/*.png from source
+node tools/sync-docs.mjs                             # mirror docs/ -> site/docs/ after editing docs
 ```
 
-All four run in CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) along with a fifth check
-described below. A PR that doesn't pass them locally won't pass there either.
+The three `cargo` commands run in CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)), along
+with the review gates described below. A PR that doesn't pass them locally won't pass there either.
+
+The two `node` tools are *generators*, so CI does not run them — it checks their output instead, and
+only where a check exists. `cargo test` fails if `site/docs/` has drifted from `docs/` (see below).
+Nothing yet checks that `docs/diagrams/*.png` still matches the source that generates them, so
+regenerating after editing a diagram is currently discipline rather than a gate.
 
 Regenerate diagrams with the tool rather than hand-editing an image — a diagram maintained as a
 static file drifts from the prose it illustrates, and nobody notices until it's wrong.
+
+**If you edit anything under `docs/`, run `node tools/sync-docs.mjs`.** `site/docs.html` is a
+client-side renderer that fetches `./docs/<page>.md` at runtime, which resolves to `site/docs/` — so
+that tree is the copy the published site actually serves, not a build artefact. The two trees are
+byte-identical by contract, and `cargo test` enforces it
+(`crates/soko-node/tests/docs_mirror.rs`); editing only `docs/` used to publish stale text with no
+signal anywhere. `node tools/sync-docs.mjs --check` reports drift without writing.
 
 ## Coverage
 
@@ -86,7 +101,7 @@ and the one bounded exception (reviews, via pseudonymous subkeys and superseding
 Two things are explicitly out of scope for a PR here, however good the reason seems:
 
 - **Cryptography.** Identity, signing, content addressing, feeds and sync are the
-  [DMTAP substrate](https://github.com/vul-os/dmtap)'s job. A hash construction or signature
+  [DMTAP substrate](https://github.com/vul-os/kotva)'s job. A hash construction or signature
   framing invented in `soko-core` is a bug, not a contribution.
 - **A settlement rail.** `soko-seam` is a provider-agnostic contract; [patala](https://github.com/vul-os/patala)
   is one implementation of it. A PR that wires a specific payment provider into `soko-seam` or
@@ -123,7 +138,7 @@ Beyond ordinary contributions, several items are blocked on expertise rather tha
 protection law, EU VAT, carrier API terms, privacy-preserving measurement, and reputation attack
 literature. Each had research passes that returned nothing verifiable, and each is recorded with
 its specific unanswered question in
-[TRACT's help-wanted](https://github.com/vul-os/tract/blob/main/docs/HELP-WANTED.md).
+[TRACT's help-wanted](https://github.com/vul-os/kotva/blob/main/profiles/tract/docs/HELP-WANTED.md).
 
 The single most valuable contribution is an implementation of TRACT that does **not** read this
 code. One implementation and one specification derived from each other only prove they agree with

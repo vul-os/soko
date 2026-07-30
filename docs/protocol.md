@@ -4,13 +4,13 @@ Soko implements TRACT. **TRACT is the standard; Soko is one implementation of it
 implementations must be buildable from the specification alone, without reading this code. Where
 Soko and the spec disagree, the spec wins.
 
-- Specification: <https://github.com/vul-os/tract>
+- Specification: <https://github.com/vul-os/kotva/tree/main/profiles/tract>
 - This implementation: <https://github.com/vul-os/soko>
 
 ## TRACT stands on the DMTAP substrate
 
 TRACT is not a new stack. It adopts the five substrate capabilities defined by
-[DMTAP](https://github.com/vul-os/dmtap), under that directory's à-la-carte adoption rule — *if a
+[DMTAP](https://github.com/vul-os/kotva), under that directory's à-la-carte adoption rule — *if a
 product implements a capability's function, it MUST speak that capability's spec* — and adds only
 the commerce spine.
 

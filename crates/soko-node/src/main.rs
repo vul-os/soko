@@ -50,7 +50,7 @@ fn main() {
             "soko-node {} — TRACT reference implementation\n\
              \n\
              Pre-alpha: the protocol is being written first, and nothing is networked yet.\n\
-             Spec:   https://github.com/vul-os/tract\n\
+             Spec:   https://github.com/vul-os/kotva/tree/main/profiles/tract\n\
              Roles:  seller · buyer · courier · distributor · index (planned)\n\
              Note:   the gateway role runs as a separate process, never in this one.\n\
              \n\

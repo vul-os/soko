@@ -1,6 +1,6 @@
 # Overview
 
-**Soko is the reference implementation of [TRACT](https://github.com/vul-os/tract)** — *Trade,
+**Soko is the reference implementation of [TRACT](https://github.com/vul-os/kotva/tree/main/profiles/tract)** — *Trade,
 Routing, Attestation, Custody & Trust* — an open protocol for decentralized commerce.
 
 > **Status: pre-alpha.** The specification is being written first, on purpose. Nothing in this

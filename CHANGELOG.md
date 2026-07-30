@@ -65,6 +65,28 @@ and isn't there yet.
   Both are checked now: 21 vector cases agree, up from 13 reported and 0 actually executed.
 - Removed five dependency declarations no source file referenced: `soko-seam` from `soko-core`,
   `soko-gateway` and `soko-node`; `thiserror` from `soko-erasure`; `soko-offer` from `soko-order`.
+- **Every link to the TRACT specification 404'd.** When TRACT moved into the KOTVA repository as a
+  profile, the harness and CI were repointed but the 18 human-facing references to
+  `github.com/vul-os/tract` were not — in the README (including the protocol badge), CONTRIBUTING,
+  SECURITY, `docs/overview.md`, `docs/protocol.md`, the `site/` landing page (including a
+  `git clone` line that could not work) and their `site/docs/` mirrors. `crates/soko-node/src/main.rs`
+  printed it **to the user on every run** of `soko-node` with no argument. Unlike the `dmtap` →
+  `kotva` rename, which GitHub still redirects, `tract` was folded in rather than renamed, so there
+  was no redirect to soften it. All now point at
+  `github.com/vul-os/kotva/tree/main/profiles/tract` (and the specific files under it, for the §21
+  grounding, help-wanted and security-policy links), which is the location the vendored corpus's
+  `PROVENANCE.json` and the `tract-vector-drift` CI job already recorded. The `dmtap` URLs were
+  repointed to `kotva` at the same time: they resolve today only via a rename redirect, which GitHub
+  drops if anything ever re-takes the old name.
+- **`docs/` and `site/docs/` were 25 duplicated files with nothing keeping them in step.**
+  `site/docs.html` is a client-side renderer that fetches `./docs/<page>.md` at runtime, so
+  `site/docs/` is the copy the published site serves rather than a build artefact — and editing
+  `docs/` alone published stale text with no signal anywhere, the duplication being invisible
+  precisely because the two copies agreed. `tools/sync-docs.mjs` now performs the copy
+  (`--check` reports drift without writing), and `crates/soko-node/tests/docs_mirror.rs` is the
+  gate. It is a Rust test so that it runs under the `cargo test --workspace` CI already gates on,
+  needing no Node toolchain in the job and leaving no `if` for it to be wrapped in. It fails closed:
+  a missing tree, an *empty* source tree, or an unreadable file is a failure, never a skip.
 
 ### Known limits at this stage
 

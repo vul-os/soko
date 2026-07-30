@@ -1,10 +1,12 @@
 # Security
 
-Soko is the reference **implementation** of [TRACT](https://github.com/vul-os/tract). This page
-covers vulnerabilities in the code in this repository. A defect in the protocol itself — an
-under-specified check, a mechanism that fails open, a trust assumption TRACT never states — belongs
-in the [tract](https://github.com/vul-os/tract/blob/main/SECURITY.md) repository instead, even if
-you found it by reading this code.
+Soko is the reference **implementation** of
+[TRACT](https://github.com/vul-os/kotva/tree/main/profiles/tract). This page covers vulnerabilities
+in the code in this repository. A defect in the protocol itself — an under-specified check, a
+mechanism that fails open, a trust assumption TRACT never states — belongs with the specification
+instead, even if you found it by reading this code: report it under
+[TRACT's security policy](https://github.com/vul-os/kotva/blob/main/profiles/tract/SECURITY.md) in
+the `vul-os/kotva` repository, which is where the TRACT profile lives.
 
 ## Reporting a vulnerability
 
@@ -72,6 +74,6 @@ re-render comparison that cannot actually detect a dishonest gateway).
 ## Cryptography
 
 Soko implements none. Identity, signing, content addressing, feeds and sync come from the
-[DMTAP substrate](https://github.com/vul-os/dmtap). A hash construction or signature framing found
+[DMTAP substrate](https://github.com/vul-os/kotva). A hash construction or signature framing found
 inside `soko-core` is itself the bug — report it here, since it would be an implementation error
 even though the primitive it should have used is specified elsewhere.

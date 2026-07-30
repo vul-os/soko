@@ -6,12 +6,12 @@
 
 <p align="center">
   <strong>Commerce without a marketplace. A keypair is a store.</strong><br />
-  <sub>Reference implementation of <a href="https://github.com/vul-os/tract">TRACT</a> — an open protocol for decentralized commerce. Rust. MIT.</sub>
+  <sub>Reference implementation of <a href="https://github.com/vul-os/kotva/tree/main/profiles/tract">TRACT</a> — an open protocol for decentralized commerce. Rust. MIT.</sub>
 </p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-16D97F?style=flat-square&labelColor=07140E" alt="MIT License" /></a>
-  <a href="https://github.com/vul-os/tract"><img src="https://img.shields.io/badge/protocol-TRACT%200.1.0-16D97F?style=flat-square&labelColor=07140E" alt="TRACT" /></a>
+  <a href="https://github.com/vul-os/kotva/tree/main/profiles/tract"><img src="https://img.shields.io/badge/protocol-TRACT%200.1.0-16D97F?style=flat-square&labelColor=07140E" alt="TRACT" /></a>
   <a href="https://www.rust-lang.org/"><img src="https://img.shields.io/badge/Rust-1.80%2B-16D97F?style=flat-square&labelColor=07140E" alt="Rust" /></a>
   <a href="docs/threat-model.md"><img src="https://img.shields.io/badge/operator%20classes-1-E9A23B?style=flat-square&labelColor=07140E" alt="One operator class" /></a>
   <a href="#status"><img src="https://img.shields.io/badge/status-pre--alpha-A1A1AA?style=flat-square&labelColor=07140E" alt="Pre-alpha" /></a>
@@ -121,7 +121,7 @@ cargo run -p soko-gateway --bin soko-storefront -- --serve 8080
 
 ## Read the evidence before believing any of it
 
-[TRACT §21](https://github.com/vul-os/tract/blob/main/21-grounding.md) records an
+[TRACT §21](https://github.com/vul-os/kotva/blob/main/profiles/tract/21-grounding.md) records an
 adversarially-verified literature pass **including the findings that contradict the design**:
 
 - **OpenBazaar** — the closest deployed relative — shut down in 2021 having moved ~**$86k over 14
@@ -191,7 +191,7 @@ conformance check that reports `ok` and verified nothing.
 The implementation's gaps are mostly ordinary work. The specification's are not — several are
 blocked on expertise this project does not have, and had multiple research passes return nothing
 verifiable. They are recorded as unevidenced rather than quietly asserted; see
-[TRACT's help-wanted](https://github.com/vul-os/tract/blob/main/docs/HELP-WANTED.md).
+[TRACT's help-wanted](https://github.com/vul-os/kotva/blob/main/profiles/tract/docs/HELP-WANTED.md).
 
 **On this repository specifically:**
 
@@ -217,7 +217,7 @@ test and review gates.
 </p>
 
 Soko implements no cryptography. Identity, signing, content addressing, feeds and sync come from the
-[DMTAP substrate](https://github.com/vul-os/dmtap); a hash construction invented in `soko-core`
+[DMTAP substrate](https://github.com/vul-os/kotva); a hash construction invented in `soko-core`
 would be a bug. Settlement rides a provider-agnostic seam —
 [patala](https://github.com/vul-os/patala) is *one* implementation of it, and `soko-seam` names no
 provider anywhere.
