@@ -16,3 +16,13 @@ thiserror.workspace = true
 ed25519-dalek.workspace = true
 blake3.workspace = true
 rand_core.workspace = true
+
+[dev-dependencies]
+# Dev-only, cross-repo backlog item A11: this crate's `address()` independently reimplements the
+# substrate's multihash-style content-address convention (TRACT §16.2: "introduces no new hash
+# construction... An implementation MUST NOT invent one"). That convention's actual reference
+# implementation is `kotva_core::id::ContentId`, published to crates.io. Pulling it in ONLY under
+# [dev-dependencies] proves `address()` byte-for-byte matches the substrate's own code — not merely
+# this crate's restatement of the spec text — while adding nothing to soko's production dependency
+# graph. See `tests/kotva_content_address_cross_check.rs`.
+kotva-core = "0.2.0"
