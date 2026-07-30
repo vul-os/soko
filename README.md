@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.svg" width="112" alt="Soko" />
+  <img src="brand/logo.svg" width="112" alt="Soko" />
 </p>
 
 <h1 align="center">Soko</h1>
@@ -232,6 +232,16 @@ rule at every call site.
 
 MIT — so any party, including competitors, may embed it. The TRACT specification is licensed
 separately under CC BY 4.0.
+
+## Brand
+
+The mark in [`brand/`](brand/) is the source of truth. Every icon this repo
+ships — favicon, PWA and app icons, the mark in the README and on the site — is
+rendered from `brand/logo.svg` rather than redrawn, so there is one approved
+drawing and no second copy to drift.
+
+Copy it outward, never edit a derived copy, and never edit `brand/` to match
+something downstream.
 
 ---
 
