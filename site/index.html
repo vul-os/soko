@@ -53,11 +53,7 @@ img{max-width:100%;display:block}
 .nav-spacer{flex:1}
 .nav-links{display:flex;align-items:center;gap:22px}
 .nav-links a{color:var(--muted);font-size:14.5px;font-weight:500;transition:color .15s}
-.nav-links a:hover{color:var(--text)}
-.vulos-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid var(--border-2);border-radius:999px;font-size:13px;color:var(--muted);transition:border-color .15s,color .15s}
-.vulos-badge:hover{border-color:var(--accent);color:var(--text)}
-.vulos-badge img{width:16px;height:16px;border-radius:4px}
-@media(max-width:760px){.nav-links{display:none}}
+.nav-links a:hover{color:var(--text)}@media(max-width:760px){.nav-links{display:none}}
 
 /* Buttons */
 .btn{display:inline-flex;align-items:center;gap:9px;padding:12px 20px;border-radius:11px;font-weight:600;font-size:15px;border:1px solid transparent;cursor:pointer;transition:transform .12s,box-shadow .2s,background .2s,border-color .2s}
@@ -117,15 +113,6 @@ img{max-width:100%;display:block}
 .decent h4::before{content:"/ ";color:var(--accent-ink);font-weight:700}
 .decent p{margin:0;color:var(--muted);font-size:14.5px}
 
-/* Vulos band */
-.vulos-band{margin:24px 0;background:linear-gradient(120deg,var(--panel),var(--bg-soft));border:1px solid var(--border);border-radius:var(--radius);padding:40px;display:flex;gap:26px;align-items:center}
-@media(max-width:680px){.vulos-band{flex-direction:column;text-align:center}}
-.vulos-band img{width:60px;height:60px;border-radius:14px;flex:none}
-.vulos-band h3{margin:0 0 6px;font-size:21px}
-.vulos-band p{margin:0;color:var(--muted);max-width:680px}
-.vulos-band .more{margin-top:14px;display:inline-flex;color:var(--accent-ink);font-weight:600;font-size:15px}
-
-
 
 /* Footer */
 .site-footer{border-top:1px solid var(--border);margin-top:40px;padding:40px 0}
@@ -151,6 +138,17 @@ img{max-width:100%;display:block}
     --inline-code-bg:rgba(0,0,0,.06);
   }
 }
+
+  /* ── Vulos suite chrome — identical on every product landing ───────────────
+     Two elements, and only two: a logo-only home button in the top bar, and
+     one line in the footer. Deliberately free of repo variables so the block
+     is byte-identical across the suite and can be diffed as one thing. */
+  .vulos-home { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 9px; flex: 0 0 auto; opacity: .72; transition: opacity .15s ease, transform .15s ease; }
+  .vulos-home:hover, .vulos-home:focus-visible { opacity: 1; transform: translateY(-1px); }
+  .vulos-home img { display: block; width: 22px; height: 22px; border-radius: 6px; }
+  .vulos-foot { display: inline-flex; align-items: center; gap: 9px; font-size: 13.5px; line-height: 1.45; text-decoration: none; color: inherit; opacity: .85; transition: opacity .15s ease; }
+  .vulos-foot:hover { opacity: 1; text-decoration: none; }
+  .vulos-foot img { display: block; width: 18px; height: 18px; border-radius: 5px; flex: 0 0 auto; }
 </style>
 </head>
 <body>
@@ -165,9 +163,7 @@ img{max-width:100%;display:block}
       <a href="./docs.html">Docs</a>
       <a href="https://github.com/vul-os/soko" target="_blank" rel="noopener">GitHub</a>
     </nav>
-    <a class="vulos-badge" href="https://vulos.org" target="_blank" rel="noopener" title="Part of Vulos">
-      <img src="./assets/vulos-logo.png" alt="Vulos">Part of Vulos
-    </a>
+    <a class="vulos-home" href="https://vulos.org" target="_blank" rel="noopener" title="Vulos — open, self-hostable software" aria-label="Vulos — open, self-hostable software"><img src="./assets/vulos-logo.png" alt="" width="22" height="22"></a>
   </div></header>
 <main>
   <section class="hero"><div class="wrap">
@@ -269,25 +265,13 @@ cd soko &amp;&amp; cargo check --workspace
     </div>
   </div></section>
 
-  <section class="section"><div class="wrap">
-    <div class="vulos-band">
-      <img src="./assets/vulos-logo.png" alt="Vulos">
-      <div>
-        <h3>Part of Vulos</h3>
-        <p>Soko is one of a family of open, self-hostable products that stand alone but compose — Envoir for mail and identity, Diwan for documents, SlipScan for books, OpenRate for exchange rates, Patala for payment rails. Same substrate, same posture: your data on your machine, no telemetry, and an honest statement of what each one cannot do.</p>
-        <a class="more" href="https://vulos.org" target="_blank" rel="noopener">Explore Vulos →</a>
-      </div>
-    </div>
-  </div></section>
 </main>
 <footer class="site-footer"><div class="wrap foot">
-    <div class="left"><img src="./assets/vulos-logo.png" alt="Vulos"> <span>Part of <a href="https://vulos.org" target="_blank" rel="noopener" style="color:var(--text)">Vulos</a> — open, self-hostable apps. Standalone by design.</span></div>
+    <a class="vulos-foot" href="https://vulos.org" target="_blank" rel="noopener"><img src="./assets/vulos-logo.png" alt="" width="18" height="18"><span>Part of <strong>Vulos</strong> — open, self-hostable software</span></a>
     <div class="links">
       <a href="./docs.html">Docs</a>
       <a href="https://github.com/vul-os/kotva/tree/main/profiles/tract" target="_blank" rel="noopener">TRACT spec</a>
       <a href="https://github.com/vul-os/soko" target="_blank" rel="noopener">GitHub</a>
-      <a href="https://github.com/vul-os/soko/blob/main/LICENSE" target="_blank" rel="noopener">Licence</a>
-      <a href="https://vulos.org" target="_blank" rel="noopener">vulos.org</a>
     </div>
   </div></footer>
 
