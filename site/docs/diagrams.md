@@ -21,9 +21,12 @@ buyer's own device.
 
 ![Soko sits on TRACT, which sits on the DMTAP substrate](./diagrams/substrate.png)
 
-Soko implements no cryptography. Identity, feeds, blobs, sync and reachability come from the DMTAP
-substrate; TRACT adds only the commerce spine; Soko is one implementation of TRACT. A hash
-construction invented in `soko-core` would be a bug, not a feature.
+Soko does not invent its own cryptographic conventions. `soko-feed` restates the DMTAP substrate's
+identity, signing and content-addressing conventions in its own code, proved byte-identical to
+`kotva-core`'s own implementation by dev-dependency cross-check tests — `kotva-core` is never called
+at runtime. Blobs, sync and reachability come from the substrate; TRACT adds only the commerce
+spine; Soko is one implementation of TRACT. A different hash or signing construction would be a bug,
+not a feature.
 
 ## The four axes
 
