@@ -216,9 +216,12 @@ test and review gates.
   <img src="docs/diagrams/substrate.png" width="620" alt="Soko sits on TRACT, which sits on the DMTAP substrate" />
 </p>
 
-Soko implements no cryptography. Identity, signing, content addressing, feeds and sync come from the
-[DMTAP substrate](https://github.com/vul-os/kotva); a hash construction invented in `soko-core`
-would be a bug. Settlement rides a provider-agnostic seam —
+Soko does not invent its own cryptographic conventions. `soko-feed` restates the
+[DMTAP substrate](https://github.com/vul-os/kotva)'s identity, signing and content-addressing
+conventions in its own code — `kotva-core` is a dev-dependency only, never called at runtime — and
+cross-check tests prove the address and signature bytes are byte-identical to the substrate's own
+implementation. A different hash or signing construction would be a bug. Settlement rides a
+provider-agnostic seam —
 [patala](https://github.com/vul-os/patala) is *one* implementation of it, and `soko-seam` names no
 provider anywhere.
 
