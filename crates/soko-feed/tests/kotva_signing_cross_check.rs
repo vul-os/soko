@@ -88,11 +88,25 @@ fn agreement_holds_across_several_feeds_not_one_lucky_sample() {
     let cases: Vec<(u8, Vec<&[u8]>, i64, u32)> = vec![
         (0x00, vec![], 0, 0),
         (0x01, vec![b"solo object"], 1, 0),
-        (0x42, vec![b"a product record", b"an offer over it"], 1_700_000_000, 0),
-        (0xff, vec![b"", b"\x00\x00\x00", b"three objects, one empty"], -1, 0),
+        (
+            0x42,
+            vec![b"a product record", b"an offer over it"],
+            1_700_000_000,
+            0,
+        ),
+        (
+            0xff,
+            vec![b"", b"\x00\x00\x00", b"three objects, one empty"],
+            -1,
+            0,
+        ),
         (0x07, vec![b"bumped sequence"], 5, 2), // two discarded head() calls first: seq ends at 3
     ];
-    assert_eq!(cases.len(), 5, "coverage: every listed case must actually run");
+    assert_eq!(
+        cases.len(),
+        5,
+        "coverage: every listed case must actually run"
+    );
 
     let mut checked = 0;
     for (seed_byte, objects, at, extra_head_calls) in &cases {
@@ -113,7 +127,8 @@ fn agreement_holds_across_several_feeds_not_one_lucky_sample() {
         let kotva_sig = kotva_key.sign_domain(HEAD_DS, &msg);
 
         assert_eq!(
-            head.sig, kotva_sig,
+            head.sig,
+            kotva_sig,
             "disagreement for seed {seed_byte:#04x}, {} object(s), at={at}, seq={}",
             objects.len(),
             head.seq
