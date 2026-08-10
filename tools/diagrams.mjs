@@ -105,6 +105,17 @@ for (const [name, src] of Object.entries(DIAGRAMS)) {
     <script>${mermaidJs}</script>
     <script>
       mermaid.initialize({startOnLoad:false, theme:'dark', securityLevel:'loose',
+        // useMaxWidth defaults to TRUE, which sets width:100% on the svg. Inside
+        // the shrink-to-fit inline-block below that resolved to 300 CSS px, so
+        // mermaid mapped a 1275px drawing through a 0.235x transform and baked
+        // the 15px labels into the export at 3.53px. Measured, not guessed —
+        // site/../scripts/check-render.mjs found the exported PNGs unreadable at
+        // every display size, because the illegibility is inside the raster.
+        // With it off the drawing is exported at its own size and the pages can
+        // scale it down as far as their column allows.
+        flowchart:{useMaxWidth:false}, sequence:{useMaxWidth:false},
+        class:{useMaxWidth:false}, state:{useMaxWidth:false},
+        er:{useMaxWidth:false}, journey:{useMaxWidth:false},
         themeVariables:{
           fontFamily:'-apple-system,BlinkMacSystemFont,Segoe UI,Inter,Roboto,Helvetica,Arial,sans-serif',
           fontSize:'15px',

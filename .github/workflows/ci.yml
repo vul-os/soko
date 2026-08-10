@@ -17,6 +17,35 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
 
+  # The landing page and docs are rendered in a real browser at eight widths in
+  # both colour schemes, and every docs chapter is loaded at 320 and 1440. None
+  # of what this catches is visible in a diff: a mermaid label declared at 16px
+  # and drawn at 4.24px because the drawing was scaled to fit, a diagram blown up
+  # 2.9x past the resolution of its own file, an in-chapter link to a heading id
+  # that marked never generated, an element pushing the page sideways.
+  site-render:
+    name: site/ renders correctly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Playwright
+        run: |
+          cd scripts
+          npm install --silent
+          npx --yes playwright install --with-deps chromium
+
+      # The self-test runs FIRST and on its own step, so a gate that has stopped
+      # discriminating stops the job before it can report a green. It breaks each
+      # invariant on purpose and requires the check to notice.
+      - name: Gate self-test
+        run: node scripts/check-render.mjs --selftest
+
+      - name: Render checks
+        run: node scripts/check-render.mjs
+
   coverage:
     # Reports workspace coverage; does not gate the build on a percentage. An arbitrary threshold
     # rewards tests written to move the number rather than tests written to catch a bug — and the

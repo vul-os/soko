@@ -76,6 +76,14 @@ img{max-width:100%;display:block}
 .cta-row{display:flex;flex-wrap:wrap;gap:13px;margin-top:30px}
 .hero-visual{margin-top:54px;border-radius:var(--radius);border:1px solid var(--border-2);overflow:hidden;box-shadow:0 40px 80px -30px rgba(0,0,0,.7);background:var(--panel)}
 .hero-visual img{width:100%;display:block}
+/* The diagrams are 2x exports of drawings whose natural size differs per
+   diagram, so each one carries its own max-width (file pixels / 2) below. The
+   card used to stretch all three to 1070px from 744px files — 2.88x at dpr2,
+   measured by scripts/check-render.mjs — which was blurry AND, because the old
+   export baked its labels in at 3.53px, unreadable. Both are fixed at the
+   source now; this rule just stops the card from magnifying them again. */
+#diagrams .hero-visual{background:var(--panel);display:flex;justify-content:center;padding:22px}
+#diagrams .hero-visual img{width:auto;max-width:100%}
 
 /* Sections */
 .section{padding:64px 0}
@@ -258,15 +266,15 @@ cd soko &amp;&amp; cargo check --workspace
     <h2>How it fits together</h2>
     <p class="lead">The storefront above is the one rendered surface. These describe the structure behind it, regenerated from source rather than hand-drawn.</p>
     <div class="hero-visual" style="margin-top:0">
-      <img src="./docs/diagrams/cart-flow.png" alt="One cart across independent sellers" loading="lazy">
+      <img src="./docs/diagrams/cart-flow.png" alt="One cart across independent sellers" loading="lazy" style="max-width:min(100%,1365px)">
     </div>
     <p style="font-size:13px;color:var(--muted);margin-top:10px">Each seller publishes a signed feed; any node may index them and none is authoritative. The buyer&rsquo;s node assembles one cart and sends a separate sealed order to each seller, so <strong style="color:var(--text)">no party sees the whole cart</strong>.</p>
     <div class="hero-visual" style="margin-top:0">
-      <img src="./docs/diagrams/axes.png" alt="The four axes of an offer" loading="lazy">
+      <img src="./docs/diagrams/axes.png" alt="The four axes of an offer" loading="lazy" style="max-width:min(100%,790px)">
     </div>
     <p style="font-size:13px;color:var(--muted);margin-top:10px">Every trade is one object with four axes. The dotted edge is the one that catches people out: <strong style="color:var(--text)">fulfilment also derives place of supply</strong>, which is the tax anchor &mdash; an event held abroad is taxed at the venue no matter where either party lives.</p>
     <div class="hero-visual" style="margin-top:34px">
-      <img src="./docs/diagrams/checkout.png" alt="Checkout across independent sellers" loading="lazy">
+      <img src="./docs/diagrams/checkout.png" alt="Checkout across independent sellers" loading="lazy" style="max-width:min(100%,1080px)">
     </div>
     <p style="font-size:13px;color:var(--muted);margin-top:10px">The buyer&rsquo;s node orchestrates; there is no central checkout. The gateway appears <strong style="color:var(--text)">only</strong> if both parties chose escrow.</p>
   </div></section>
